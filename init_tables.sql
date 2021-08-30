@@ -8,7 +8,8 @@ DROP TABLE IF EXISTS keywords;
 
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
-  username TEXT
+  username TEXT,
+  password TEXT
 );
 
 CREATE TABLE IF NOT EXISTS stories (

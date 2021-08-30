@@ -8,9 +8,31 @@ const validateStoryTitle = (story) => {
   return obj;
 };
 
-const validateStory = (story) => ({
+const validateUserName = (userInfo) => {
+  const obj = {};
+  if (!userInfo.username || userInfo.username.trim === '') {
+    obj.username_invalid = 'Please enter a valid username.';
+  }
+  return obj;
+};
+
+const validatePassword = (userInfo) => {
+  const obj = {};
+  if (!userInfo.password || userInfo.password.trim === '' || userInfo.password.length < 8) {
+    obj.password_invalid = 'Please enter a valid password of at least 8 characters long.';
+  }
+  return obj;
+};
+
+export const validateStory = (story) => ({
   ...story,
   ...validateStoryTitle(story),
+});
+
+export const validateUserInfo = (userInfo) => ({
+  ...userInfo,
+  ...validateUserName(userInfo),
+  ...validatePassword(userInfo),
 });
 
 export default validateStory;

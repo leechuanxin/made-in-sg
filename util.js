@@ -31,3 +31,5 @@ export const getRandomIds = (arr, count) => {
 };
 
 export const getInvalidFormRequests = (obj) => Object.keys(obj).filter((key) => key.indexOf('invalid') >= 0);
+
+export const setDbUsername = (username) => username.toLowerCase().split(' ').join('_');
