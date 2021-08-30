@@ -17,4 +17,17 @@ export const getHash = (input) => {
   return shaObj.getHash('HEX');
 };
 
+export const getRandomIds = (arr, count) => {
+  const idArr = [];
+  for (let i = 0; i < count; i += 1) {
+    const randomIndex = Math.floor(Math.random() * arr.length);
+    const retrievedId = arr.splice(randomIndex, 1)[0].id;
+    idArr.push(retrievedId);
+  }
+  if (count === 1) {
+    return idArr[0];
+  }
+  return idArr;
+};
+
 export const getInvalidFormRequests = (obj) => Object.keys(obj).filter((key) => key.indexOf('invalid') >= 0);
