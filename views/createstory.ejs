@@ -1,0 +1,43 @@
+<%- include('headers/html-header', {}); -%><%- include('nav/navbar', {}); -%>
+<div class="container-fluid d-flex align-items-stretch pt-5">
+  <div class="row align-items-stretch w-100 pt-3">
+    <div class="col-12 py-3">
+      <form action="/story" method="POST">
+        <div class="row">
+          <div class="col-12">
+            <h4 class="mb-3 index-header">Create a New Story!</h4>
+          </div>
+          <div class="col-12">
+            <label for="storyTitle">
+              <strong>Story Title</strong>
+            </label>
+            <input
+              type="text"
+              class="
+                form-control
+                <%
+                if
+                (story.story_title_invalid)
+                {%>
+                is-invalid
+                <%
+                }
+                %>
+              "
+              id="storyTitle"
+              name="title"
+              value="<%= story.title %>"
+            />
+            <div class="invalid-feedback"><%= story.story_title_invalid %></div>
+          </div>
+        </div>
+        <hr class="mb-4" />
+        <button class="btn btn-primary btn-lg btn-block" type="submit">
+          Create Story
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('footers/html-footer'); -%>
