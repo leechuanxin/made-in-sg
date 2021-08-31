@@ -32,4 +32,16 @@ export const getRandomIds = (arr, count) => {
 
 export const getInvalidFormRequests = (obj) => Object.keys(obj).filter((key) => key.indexOf('invalid') >= 0);
 
+export const capitalizeFirstLetter = (str) => str
+  .substring(0, 1)
+  .toUpperCase()
+  .concat(str.substring(1));
+
 export const setDbUsername = (username) => username.toLowerCase().split(' ').join('_');
+export const setUiUsername = (username) => username
+  .split('_')
+  .map((nameStr) => capitalizeFirstLetter(nameStr))
+  .join(' ')
+  .split('-')
+  .map((nameStr) => capitalizeFirstLetter(nameStr))
+  .join('-');

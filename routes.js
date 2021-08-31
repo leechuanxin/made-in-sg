@@ -67,7 +67,8 @@ export const handleGetStory = (pool) => (request, response) => {
       if (result.rows.length === 0) {
         throw new Error(STORY_NOT_FOUND_ERROR_MESSAGE);
       } else {
-        response.render('viewstory', { user: request.user, story: result.rows[0] });
+        const createdUsernameFmt = util.setUiUsername(result.rows[0].created_username);
+        response.render('viewstory', { user: request.user, story: { created_username_fmt: createdUsernameFmt, ...result.rows[0] } });
       }
     })
     .catch((error) => {
