@@ -62,5 +62,6 @@ app.post('/login', routes.handlePostLogin(pool));
 app.delete('/logout', routes.handleLogout);
 app.get('/story', routes.handleGetNewStory);
 app.post('/story', routes.handlePostNewStory(pool));
+app.get('/story/:id', routes.handleGetStory(pool));
 
 app.listen(PORT);

@@ -13,7 +13,13 @@
               Do not have an account yet? Register <a href="/signup">here.</a>
             </p>
           </div>
-          <% if (genericError && genericError.message) { %>
+          <% if (genericSuccess && genericSuccess.message) { %>
+          <div class="col-12">
+            <div class="alert alert-success" role="alert">
+              <%= genericSuccess.message %>
+            </div>
+          </div>
+          <% } %> <% if (genericError && genericError.message) { %>
           <div class="col-12">
             <div class="alert alert-danger" role="alert">
               <%= genericError.message %>

@@ -8,6 +8,7 @@ const START_PARA_COUNT = 1;
 const END_PARA_COUNT = 1;
 const USERNAME_EXISTS_ERROR_MESSAGE = 'Username exists!';
 const LOGIN_FAILED_ERROR_MESSAGE = 'Login failed!';
+const STORY_NOT_FOUND_ERROR_MESSAGE = 'Story not found!';
 
 export const handleGetNewStory = (request, response) => {
   if (!request.isUserLoggedIn) {
@@ -24,7 +25,7 @@ export const handlePostNewStory = (pool) => (request, response) => {
 
   if (!request.isUserLoggedIn) {
     const errorMessage = 'You have to be logged in to create a new story!';
-    response.render('login', { userInfo: {}, genericError: { message: errorMessage } });
+    response.render('login', { userInfo: {}, genericSuccess: {}, genericError: { message: errorMessage } });
   } else if (invalidRequests.length > 0) {
     response.render('createstory', {
       story: validatedStory,
@@ -49,12 +50,33 @@ export const handlePostNewStory = (pool) => (request, response) => {
         return pool.query(newStoryQuery);
       })
       .then((result) => {
-        response.send(`success: ${result.rows[0].title}`);
+        response.redirect(`/story/${result.rows[0].id}`);
       })
       .catch((error) => {
         response.send(`error: ${error.stack}`);
       });
   }
+};
+
+export const handleGetStory = (pool) => (request, response) => {
+  const { id } = request.params;
+  const storyQuery = `SELECT stories.id, stories.created_user_id, users.username AS created_username, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id WHERE stories.id=${id}`;
+  pool
+    .query(storyQuery)
+    .then((result) => {
+      if (result.rows.length === 0) {
+        throw new Error(STORY_NOT_FOUND_ERROR_MESSAGE);
+      } else {
+        response.render('viewstory', { user: request.user, story: result.rows[0] });
+      }
+    })
+    .catch((error) => {
+      if (error.message === STORY_NOT_FOUND_ERROR_MESSAGE) {
+        response.status(404).send(`Error 404: ${STORY_NOT_FOUND_ERROR_MESSAGE}`);
+      } else {
+        response.send(`Error: ${error.message}`);
+      }
+    });
 };
 
 export const handleGetSignup = (request, response) => {
@@ -92,8 +114,9 @@ export const handlePostSignup = (pool) => (request, response) => {
           return pool.query(newUserQuery, values);
         }
       })
-      .then((result) => {
-        response.send(`success: ${result.rows[0].username}`);
+      .then(() => {
+        const successMessage = 'You have registered successfully! Please log in.';
+        response.render('login', { userInfo: {}, genericSuccess: { message: successMessage }, genericError: {} });
       })
       .catch((error) => {
         let errorMessage = '';
@@ -112,7 +135,9 @@ export const handleGetLogin = (request, response) => {
   if (request.isUserLoggedIn) {
     response.redirect('/');
   } else {
-    response.render('login', { user: {}, userInfo: {}, genericError: {} });
+    response.render('login', {
+      user: {}, userInfo: {}, genericSuccess: {}, genericError: {},
+    });
   }
 };
 
@@ -123,6 +148,7 @@ export const handlePostLogin = (pool) => (request, response) => {
   if (invalidRequests.length > 0) {
     response.render('login', {
       userInfo: validatedLogin,
+      genericSuccess: {},
       genericError: {},
     });
   } else {
@@ -172,7 +198,7 @@ export const handlePostLogin = (pool) => (request, response) => {
           errorMessage = error.message;
         }
 
-        response.render('login', { userInfo: validatedLogin, genericError: { message: errorMessage } });
+        response.render('login', { userInfo: validatedLogin, genericSuccess: {}, genericError: { message: errorMessage } });
       });
   }
 };
