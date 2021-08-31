@@ -19,7 +19,8 @@ const auth = (pool) => (request, response, next) => {
       // try to get the user
       pool.query('SELECT * FROM users WHERE id=$1', values, (error, result) => {
         if (error || result.rows.length < 1) {
-          response.status(503).send('sorry!');
+          const errorMessage = 'Your session has expired! Please try logging in again.';
+          response.render('login', { userInfo: {}, genericError: { message: errorMessage } });
           return;
         }
 
