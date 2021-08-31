@@ -1,5 +1,5 @@
-<%- include('headers/html-header', {}); -%><%- include('nav/navbar', { user: {}
-}); -%>
+<%- include('headers/html-header', {}); -%><%- include('nav/navbar', { user: {},
+showButton: false }); -%>
 <div class="container-fluid d-flex align-items-stretch pt-5">
   <div class="row align-items-stretch w-100 pt-3">
     <div class="col-12 py-3">
@@ -7,6 +7,11 @@
         <div class="row">
           <div class="col-12">
             <h4 class="mb-3 index-header">Register</h4>
+          </div>
+          <div class="col-12">
+            <p class="mb-3">
+              Already have an account? Log in <a href="/login">here.</a>
+            </p>
           </div>
           <% if (genericError && genericError.message) { %>
           <div class="col-12">
