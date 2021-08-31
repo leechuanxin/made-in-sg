@@ -1,5 +1,3 @@
-import jsSHA from 'jssha';
-
 // CUSTOM IMPORTS
 import * as validation from './validation.js';
 import * as util from './util.js';
@@ -148,14 +146,10 @@ export const handlePostLogin = (pool) => (request, response) => {
             // This is to prevent detection of whether a user has an account for a given service.
             throw new Error(LOGIN_FAILED_ERROR_MESSAGE);
           } else {
-            // create new SHA object for cookie
-            // eslint-disable-next-line new-cap
-            const shaObjCookie = new jsSHA('SHA-512', 'TEXT', { encoding: 'UTF8' });
             // create an unhashed cookie string based on user ID and salt
             const unhashedCookieString = `${result.rows[0].id}-${SALT}`;
             // generate a hashed cookie string using SHA object
-            shaObjCookie.update(unhashedCookieString);
-            const hashedCookieString = shaObjCookie.getHash('HEX');
+            const hashedCookieString = util.getHash(unhashedCookieString);
             // set the loggedIn and userId cookies in the response
             // The user's password hash matches that in the DB and we authenticate the user.
             response.cookie('loggedIn', hashedCookieString);
