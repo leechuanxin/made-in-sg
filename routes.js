@@ -13,7 +13,7 @@ export const handleGetNewStory = (request, response) => {
   if (!request.isUserLoggedIn) {
     response.redirect('/login');
   } else {
-    response.render('createstory', { story: {} });
+    response.render('createstory', { user: request.user, story: {} });
   }
 };
 
@@ -22,7 +22,10 @@ export const handlePostNewStory = (pool) => (request, response) => {
   const validatedStory = validation.validateStory(story);
   const invalidRequests = util.getInvalidFormRequests(validatedStory);
 
-  if (invalidRequests.length > 0) {
+  if (!request.isUserLoggedIn) {
+    const errorMessage = 'You have to be logged in to create a new story!';
+    response.render('login', { userInfo: {}, genericError: { message: errorMessage } });
+  } else if (invalidRequests.length > 0) {
     response.render('createstory', {
       story: validatedStory,
     });
@@ -57,7 +60,7 @@ export const handleGetSignup = (request, response) => {
   if (request.isUserLoggedIn) {
     response.redirect('/');
   } else {
-    response.render('signup', { userInfo: {}, genericError: {} });
+    response.render('signup', { user: {}, userInfo: {}, genericError: {} });
   }
 };
 
@@ -107,7 +110,7 @@ export const handleGetLogin = (request, response) => {
   if (request.isUserLoggedIn) {
     response.redirect('/');
   } else {
-    response.render('login', { userInfo: {}, genericError: {} });
+    response.render('login', { user: {}, userInfo: {}, genericError: {} });
   }
 };
 
@@ -168,5 +171,15 @@ export const handlePostLogin = (pool) => (request, response) => {
 
         response.render('login', { userInfo: validatedLogin, genericError: { message: errorMessage } });
       });
+  }
+};
+
+export const handleLogout = (request, response) => {
+  if (request.cookies.loggedIn) {
+    response.clearCookie('userId');
+    response.clearCookie('loggedIn');
+    response.redirect('/');
+  } else {
+    response.status(403).send('Error logging out!');
   }
 };

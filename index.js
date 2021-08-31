@@ -59,6 +59,7 @@ app.get('/signup', routes.handleGetSignup);
 app.post('/signup', routes.handlePostSignup(pool));
 app.get('/login', routes.handleGetLogin);
 app.post('/login', routes.handlePostLogin(pool));
+app.delete('/logout', routes.handleLogout);
 app.get('/story', routes.handleGetNewStory);
 app.post('/story', routes.handlePostNewStory(pool));
 
