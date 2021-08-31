@@ -1,13 +1,18 @@
 import * as util from './util.js';
 
+// GLOBAL CONSTANTS
+const { SALT } = process.env;
+
 const auth = (pool) => (request, response, next) => {
   // set the default value
   request.isUserLoggedIn = false;
 
   // check to see if the cookies you need exists
   if (request.cookies.loggedIn && request.cookies.userId) {
-    // get the hased value that should be inside the cookie
-    const hash = util.getHash(request.cookies.userId);
+    // create an unhashed cookie string based on user ID and salt
+    const unhashedCookieString = `${request.cookies.userId}-${SALT}`;
+    // get the hashed value that should be inside the cookie
+    const hash = util.getHash(unhashedCookieString);
 
     // test the value of the cookie
     if (request.cookies.loggedIn === hash) {
