@@ -55,6 +55,7 @@ const PORT = process.argv[2];
 // Auth
 app.use(auth(pool));
 // Routes
+app.get('/', routes.handleIndex(pool));
 app.get('/signup', routes.handleGetSignup);
 app.post('/signup', routes.handlePostSignup(pool));
 app.get('/login', routes.handleGetLogin);

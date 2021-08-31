@@ -2,6 +2,7 @@ import jsSHA from 'jssha';
 
 // GLOBAL CONSTANTS
 const { SALT } = process.env;
+const STORY_SUMMARY_CHAR_LIMIT = 155;
 
 export const getHash = (input) => {
   // create new SHA object
@@ -45,3 +46,11 @@ export const setUiUsername = (username) => username
   .split('-')
   .map((nameStr) => capitalizeFirstLetter(nameStr))
   .join('-');
+
+export const setStorySummary = (paragraph) => {
+  if (paragraph.length > STORY_SUMMARY_CHAR_LIMIT) {
+    return paragraph.substring(0, STORY_SUMMARY_CHAR_LIMIT + 1).concat('...');
+  }
+
+  return paragraph;
+};

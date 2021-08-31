@@ -10,6 +10,21 @@ const USERNAME_EXISTS_ERROR_MESSAGE = 'Username exists!';
 const LOGIN_FAILED_ERROR_MESSAGE = 'Login failed!';
 const STORY_NOT_FOUND_ERROR_MESSAGE = 'Story not found!';
 
+export const handleIndex = (pool) => (request, response) => {
+  // retrieve all stories, sorted latest (created) first
+  const storiesQuery = 'SELECT stories.id, stories.created_user_id, users.username AS created_username, stories.created_at, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id ORDER BY stories.created_at DESC';
+  pool
+    .query(storiesQuery)
+    .then((result) => {
+      const stories = result.rows.map((story) => ({
+        ...story,
+        created_username_fmt: util.setUiUsername(story.created_username),
+        summary: util.setStorySummary(story.starting_paragraph),
+      }));
+      response.render('index', { user: request.user, stories });
+    });
+};
+
 export const handleGetNewStory = (request, response) => {
   if (!request.isUserLoggedIn) {
     response.redirect('/login');

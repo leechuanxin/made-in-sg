@@ -1,4 +1,26 @@
+* {
+  box-sizing: border-box;
+}
+
 .random-paragraph:first-line {
   font-weight: bold;
   font-variant: small-caps;
+}
+
+.text-truncated,
+.text-truncated-parent,
+.text-truncated-parent * {
+  /* Ellipsis */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+a.card-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.card-paragraph {
+  flex-grow: 1;
 }
