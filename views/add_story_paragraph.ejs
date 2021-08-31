@@ -31,27 +31,45 @@ user, showButton: true }); -%>
       <p class="randomParagraph random-paragraph fs-5 text-black mb-5">
         <%= story.starting_paragraph %>
       </p>
-      <% if (user && user.id) { %>
       <div class="col-12">
+        <a class="anchor-name" name="add-paragraph"></a>
         <hr />
-        <div class="row">
-          <div class="col-12 col-md-2"></div>
-          <div class="col-12 col-md-8">
-            <div class="d-grid">
-              <a
-                class="btn btn-lg btn-outline-success"
-                href="/story/<%= story.id %>/paragraph#add-paragraph"
-                role="button"
-                >+ Add a New Paragraph</a
-              >
+        <form action="/story/<%= story.id %>/paragraph" method="POST">
+          <div class="row mb-4">
+            <div class="col-12">
+              <p>
+                Write a paragraph that includes each of the following words at
+                least once:
+              </p>
+              <ul>
+                <li>lorem</li>
+                <li>ipsum</li>
+                <li>dolor</li>
+              </ul>
+            </div>
+            <div class="col-12">
+              <textarea
+                class="form-control"
+                id="ufoStory"
+                name="paragraph"
+                rows="5"
+                placeholder=""
+              ></textarea>
+              <div class="invalid-feedback">Some invalid feedback</div>
             </div>
           </div>
-          <div class="col-12 col-md-2"></div>
-        </div>
+          <div class="row">
+            <div class="col-12">
+              <button class="btn btn-primary btn-lg btn-block" type="submit">
+                Add Paragraph
+              </button>
+            </div>
+          </div>
+        </form>
 
         <hr />
       </div>
-      <% } %> <%#
+      <%#
       <p class="userGeneratedParagraph fs-5 text-black text-opacity-75">
         Some text paragraph
       </p>

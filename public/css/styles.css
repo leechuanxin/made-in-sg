@@ -24,3 +24,10 @@ a.card-link {
 .card-paragraph {
   flex-grow: 1;
 }
+
+.anchor-name {
+  display: block;
+  position: relative;
+  top: -130px;
+  visibility: hidden;
+}

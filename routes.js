@@ -95,6 +95,32 @@ export const handleGetStory = (pool) => (request, response) => {
     });
 };
 
+export const handleGetStoryParagraph = (pool) => (request, response) => {
+  if (!request.isUserLoggedIn) {
+    response.redirect('/login');
+  } else {
+    const { id } = request.params;
+    const storyQuery = `SELECT stories.id, stories.created_user_id, users.username AS created_username, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id WHERE stories.id=${id}`;
+    pool
+      .query(storyQuery)
+      .then((result) => {
+        if (result.rows.length === 0) {
+          throw new Error(STORY_NOT_FOUND_ERROR_MESSAGE);
+        } else {
+          const createdUsernameFmt = util.setUiUsername(result.rows[0].created_username);
+          response.render('add_story_paragraph', { user: request.user, story: { created_username_fmt: createdUsernameFmt, ...result.rows[0] } });
+        }
+      })
+      .catch((error) => {
+        if (error.message === STORY_NOT_FOUND_ERROR_MESSAGE) {
+          response.status(404).send(`Error 404: ${STORY_NOT_FOUND_ERROR_MESSAGE}`);
+        } else {
+          response.send(`Error: ${error.message}`);
+        }
+      });
+  }
+};
+
 export const handleGetSignup = (request, response) => {
   if (request.isUserLoggedIn) {
     response.redirect('/');

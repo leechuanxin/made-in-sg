@@ -64,5 +64,6 @@ app.delete('/logout', routes.handleLogout);
 app.get('/story', routes.handleGetNewStory);
 app.post('/story', routes.handlePostNewStory(pool));
 app.get('/story/:id', routes.handleGetStory(pool));
+app.get('/story/:id/paragraph', routes.handleGetStoryParagraph(pool));
 
 app.listen(PORT);

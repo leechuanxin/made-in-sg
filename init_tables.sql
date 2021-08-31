@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS ending_paragraphs;
 DROP TABLE IF EXISTS paragraphs;
 DROP TABLE IF EXISTS paragraphs_keywords;
 DROP TABLE IF EXISTS keywords;
+DROP TABLE IF EXISTS collaborators_stories;
 
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
@@ -53,4 +54,13 @@ CREATE TABLE IF NOT EXISTS keywords (
   id SERIAL PRIMARY KEY,
   keyword TEXT,
   type TEXT
+);
+
+CREATE TABLE IF NOT EXISTS collaborators_stories (
+  id SERIAL PRIMARY KEY,
+  collaborator_id INTEGER,
+  story_id INTEGER,
+  keyword1_id INTEGER,
+  keyword2_id INTEGER,
+  keyword3_id INTEGER
 );
