@@ -12,7 +12,11 @@ const USERNAME_EXISTS_ERROR_MESSAGE = 'Username exists!';
 const LOGIN_FAILED_ERROR_MESSAGE = 'Login failed!';
 
 export const handleGetNewStory = (request, response) => {
-  response.render('createstory', { story: {} });
+  if (!request.isUserLoggedIn) {
+    response.redirect('/login');
+  } else {
+    response.render('createstory', { story: {} });
+  }
 };
 
 export const handlePostNewStory = (pool) => (request, response) => {
@@ -52,7 +56,11 @@ export const handlePostNewStory = (pool) => (request, response) => {
 };
 
 export const handleGetSignup = (request, response) => {
-  response.render('signup', { userInfo: {}, genericError: {} });
+  if (request.isUserLoggedIn) {
+    response.redirect('/');
+  } else {
+    response.render('signup', { userInfo: {}, genericError: {} });
+  }
 };
 
 export const handlePostSignup = (pool) => (request, response) => {
@@ -98,7 +106,11 @@ export const handlePostSignup = (pool) => (request, response) => {
 };
 
 export const handleGetLogin = (request, response) => {
-  response.render('login', { userInfo: {}, genericError: {} });
+  if (request.isUserLoggedIn) {
+    response.redirect('/');
+  } else {
+    response.render('login', { userInfo: {}, genericError: {} });
+  }
 };
 
 export const handlePostLogin = (pool) => (request, response) => {
