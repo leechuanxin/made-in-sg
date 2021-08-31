@@ -5,7 +5,7 @@ const auth = (pool) => (request, response, next) => {
   request.isUserLoggedIn = false;
 
   // check to see if the cookies you need exists
-  if (request.cookies.loggedIn && request.cookie.userId) {
+  if (request.cookies.loggedIn && request.cookies.userId) {
     // get the hased value that should be inside the cookie
     const hash = util.getHash(request.cookies.userId);
 
