@@ -20,7 +20,7 @@ export const getHash = (input) => {
 
 export const getRandomIds = (arr, count) => {
   const idArr = [];
-  for (let i = 0; (i < count || arr.length > 0); i += 1) {
+  for (let i = 0; (i < count && arr.length > 0); i += 1) {
     const randomIndex = Math.floor(Math.random() * arr.length);
     const retrievedId = arr.splice(randomIndex, 1)[0].id;
     idArr.push(retrievedId);

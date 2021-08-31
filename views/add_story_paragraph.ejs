@@ -42,9 +42,9 @@ user, showButton: true }); -%>
                 least once:
               </p>
               <ul>
-                <li>lorem</li>
-                <li>ipsum</li>
-                <li>dolor</li>
+                <% story.keywords.forEach((keyword) => { %>
+                <li><%= keyword %></li>
+                <% }); %>
               </ul>
             </div>
             <div class="col-12">
