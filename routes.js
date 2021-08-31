@@ -44,7 +44,8 @@ export const handlePostNewStory = (pool) => (request, response) => {
       .then((result) => {
         const endParas = [...result.rows];
         randomEndParaId = util.getRandomIds(endParas, END_PARA_COUNT);
-        const newStoryQuery = `INSERT INTO stories (starting_paragraph_id, ending_paragraph_id, title) VALUES (${randomStartParaId}, ${randomEndParaId}, '${validatedStory.title}') RETURNING *`;
+        const titleFmt = validatedStory.title.split("'").join("''");
+        const newStoryQuery = `INSERT INTO stories (created_user_id, last_updated_user_id, starting_paragraph_id, ending_paragraph_id, title) VALUES (${request.user.id}, ${request.user.id}, ${randomStartParaId}, ${randomEndParaId}, '${titleFmt}') RETURNING *`;
         return pool.query(newStoryQuery);
       })
       .then((result) => {
@@ -76,7 +77,8 @@ export const handlePostSignup = (pool) => (request, response) => {
   } else {
     // get the hashed password as output from the SHA object
     const hashedPassword = util.getHash(validatedUserInfo.password);
-    const username = util.setDbUsername(validatedUserInfo.username);
+    const nameFmt = validatedUserInfo.username.split("'").join("''");
+    const username = util.setDbUsername(nameFmt);
 
     const usernameQuery = `SELECT * FROM users WHERE username='${username}'`;
     pool
@@ -124,7 +126,8 @@ export const handlePostLogin = (pool) => (request, response) => {
       genericError: {},
     });
   } else {
-    const username = util.setDbUsername(request.body.username);
+    const nameFmt = validatedLogin.username.split("'").join("''");
+    const username = util.setDbUsername(nameFmt);
     const usernameQuery = `SELECT * from users WHERE username='${username}'`;
 
     pool
@@ -175,7 +178,7 @@ export const handlePostLogin = (pool) => (request, response) => {
 };
 
 export const handleLogout = (request, response) => {
-  if (request.cookies.loggedIn) {
+  if (request.isUserLoggedIn) {
     response.clearCookie('userId');
     response.clearCookie('loggedIn');
     response.redirect('/');
