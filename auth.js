@@ -27,7 +27,7 @@ const auth = (pool) => (request, response, next) => {
           response.clearCookie('userId');
           response.clearCookie('loggedIn');
           const errorMessage = 'Your session has expired! Please try logging in again.';
-          response.render('login', { userInfo: {}, genericError: { message: errorMessage } });
+          response.render('login', { userInfo: {}, genericSuccess: {}, genericError: { message: errorMessage } });
           return;
         }
 
