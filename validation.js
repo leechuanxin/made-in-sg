@@ -8,10 +8,14 @@ const validateStoryTitle = (story) => {
   return obj;
 };
 
-const validateUserName = (userInfo) => {
+const validateUserName = (userInfo, type) => {
   const obj = {};
   if (!userInfo.username || userInfo.username.trim === '') {
-    obj.username_invalid = 'Please enter a valid username.';
+    if (type === 'login') {
+      obj.username_invalid = 'Please enter a username.';
+    } else {
+      obj.username_invalid = 'Please enter a valid username.';
+    }
   }
   return obj;
 };
@@ -31,8 +35,13 @@ export const validateStory = (story) => ({
 
 export const validateUserInfo = (userInfo) => ({
   ...userInfo,
-  ...validateUserName(userInfo),
+  ...validateUserName(userInfo, 'signup'),
   ...validatePassword(userInfo),
+});
+
+export const validateLogin = (userInfo) => ({
+  ...userInfo,
+  ...validateUserName(userInfo, 'login'),
 });
 
 export default validateStory;
