@@ -49,13 +49,12 @@ user, showButton: true }); -%>
             </div>
             <div class="col-12">
               <textarea
-                class="form-control"
-                id="ufoStory"
+                class="form-control <% if (paragraph && typeof paragraph.invalidReqText === "string" && paragraph.invalidReqText.length > 0) { %>is-invalid<% } %>"
                 name="paragraph"
                 rows="5"
                 placeholder=""
               ></textarea>
-              <div class="invalid-feedback">Some invalid feedback</div>
+              <div class="invalid-feedback"><%= paragraph.invalidReqText %></div>
             </div>
           </div>
           <div class="row">

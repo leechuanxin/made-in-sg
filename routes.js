@@ -6,7 +6,6 @@ import * as util from './util.js';
 const { SALT } = process.env;
 const START_PARA_COUNT = 1;
 const END_PARA_COUNT = 1;
-const KEYWORDS_COUNT = 3;
 const USERNAME_EXISTS_ERROR_MESSAGE = 'Username exists!';
 const LOGIN_FAILED_ERROR_MESSAGE = 'Login failed!';
 const STORY_NOT_FOUND_ERROR_MESSAGE = 'Story not found!';
@@ -96,83 +95,25 @@ export const handleGetStory = (pool) => (request, response) => {
     });
 };
 
-export const handleGetStoryParagraph = (pool) => (request, response) => {
+export const handleGetStoryParagraph = (request, response) => {
+  response.render('add_story_paragraph', { user: request.user, story: request.story, paragraph: {} });
+};
+
+export const handlePostStoryParagraph = (request, response) => {
+  const paragraph = request.body;
+  const validatedParagraph = validation.validateParagraph(paragraph, request.story.keywords);
+  const invalidRequests = util.getInvalidFormRequests(validatedParagraph);
+
   if (!request.isUserLoggedIn) {
-    response.redirect('/login');
-  } else {
-    const { id } = request.params;
-    let collabInfo = {};
-    let story = {};
-
-    // check if story id exists
-    const storyQuery = `SELECT stories.id, stories.created_user_id, users.username AS created_username, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id WHERE stories.id=${id}`;
-    pool
-      .query(storyQuery)
-      // check if current user is already a collaborator in story
-      .then((result) => {
-        if (result.rows.length === 0) {
-          throw new Error(STORY_NOT_FOUND_ERROR_MESSAGE);
-        } else {
-          if (result.rows.length > 0) {
-            story = { ...result.rows[0] };
-          }
-          const collabQuery = `SELECT * FROM collaborators_stories WHERE collaborator_id=${request.user.id} AND story_id=${id}`;
-
-          return pool.query(collabQuery);
-        }
-      })
-      // retrieve all keywords
-      .then((result) => {
-        if (result.rows.length > 0) {
-          collabInfo = {
-            ...collabInfo,
-            ...result.rows[0],
-          };
-        }
-        const keywordsQuery = 'SELECT * FROM keywords';
-        return pool.query(keywordsQuery);
-      })
-      // if current user is already collaborator, use existing keywords
-      // else, add entry that user is now collaborator, assign 3 random keywords
-      .then((result) => {
-        const keywords = [...result.rows];
-        let nextQuery = '';
-        if (Object.keys(collabInfo).length > 0) {
-          nextQuery = `SELECT * FROM collaborators_stories WHERE collaborator_id=${collabInfo.collaborator_id} AND story_id=${collabInfo.story_id}`;
-          return pool.query(nextQuery);
-        }
-        const values = util.getRandomIds(keywords, KEYWORDS_COUNT);
-        nextQuery = `INSERT INTO collaborators_stories (collaborator_id, story_id, keyword1_id, keyword2_id, keyword3_id) VALUES (${request.user.id}, ${id}, $1, $2, $3) RETURNING *`;
-        return pool.query(nextQuery, values);
-      })
-      // get the text form of the 3 assigned keywords
-      .then((result) => {
-        const keywordIds = [
-          result.rows[0].keyword1_id,
-          result.rows[0].keyword2_id,
-          result.rows[0].keyword3_id,
-        ];
-        story = { ...story, keywordIds };
-        const getKeywordsQuery = 'SELECT * FROM keywords where id=$1 OR id=$2 OR id=$3';
-        return pool.query(getKeywordsQuery, keywordIds);
-      })
-      // render page, with the keywords to use
-      .then((result) => {
-        const keywords = [];
-        for (let i = 0; i < result.rows.length; i += 1) {
-          keywords.push(result.rows[i].keyword);
-        }
-        story = { ...story, keywords };
-        const createdUsernameFmt = util.setUiUsername(story.created_username);
-        response.render('add_story_paragraph', { user: request.user, story: { created_username_fmt: createdUsernameFmt, ...story } });
-      })
-      .catch((error) => {
-        if (error.message === STORY_NOT_FOUND_ERROR_MESSAGE) {
-          response.status(404).send(`Error 404: ${STORY_NOT_FOUND_ERROR_MESSAGE}`);
-        } else {
-          response.send(`Error: ${error.message}`);
-        }
-      });
+    const errorMessage = 'You have to be logged in to add a new paragraph!';
+    response.render('login', { userInfo: {}, genericSuccess: {}, genericError: { message: errorMessage } });
+  } else if (invalidRequests.length > 0) {
+    const invalidReqText = invalidRequests.map((req) => validatedParagraph[req]).join(' ');
+    response.render('add_story_paragraph', {
+      user: request.user,
+      story: request.story,
+      paragraph: { ...validatedParagraph, invalidReqText },
+    });
   }
 };
 

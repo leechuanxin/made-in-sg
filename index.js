@@ -5,7 +5,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 
 // Custom imports
-import auth from './auth.js';
+import * as middleware from './middleware.js';
 import * as routes from './routes.js';
 
 // Initialise DB connection
@@ -53,7 +53,7 @@ dotenv.config();
 const PORT = process.argv[2];
 
 // Auth
-app.use(auth(pool));
+app.use(middleware.auth(pool));
 // Routes
 app.get('/', routes.handleIndex(pool));
 app.get('/signup', routes.handleGetSignup);
@@ -64,6 +64,7 @@ app.delete('/logout', routes.handleLogout);
 app.get('/story', routes.handleGetNewStory);
 app.post('/story', routes.handlePostNewStory(pool));
 app.get('/story/:id', routes.handleGetStory(pool));
-app.get('/story/:id/paragraph', routes.handleGetStoryParagraph(pool));
+app.get('/story/:id/paragraph', middleware.checkStoryCollab(pool), routes.handleGetStoryParagraph);
+app.post('/story/:id/paragraph', middleware.checkStoryCollab(pool), routes.handlePostStoryParagraph);
 
 app.listen(PORT);
