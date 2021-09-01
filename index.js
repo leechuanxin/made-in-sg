@@ -65,6 +65,6 @@ app.get('/story', routes.handleGetNewStory);
 app.post('/story', routes.handlePostNewStory(pool));
 app.get('/story/:id', routes.handleGetStory(pool));
 app.get('/story/:id/paragraph', middleware.checkStoryCollab(pool), routes.handleGetStoryParagraph);
-app.post('/story/:id/paragraph', middleware.checkStoryCollab(pool), routes.handlePostStoryParagraph);
+app.post('/story/:id/paragraph', middleware.checkStoryCollab(pool), routes.handlePostStoryParagraph(pool));
 
 app.listen(PORT);

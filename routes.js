@@ -99,7 +99,7 @@ export const handleGetStoryParagraph = (request, response) => {
   response.render('add_story_paragraph', { user: request.user, story: request.story, paragraph: {} });
 };
 
-export const handlePostStoryParagraph = (request, response) => {
+export const handlePostStoryParagraph = (pool) => (request, response) => {
   const paragraph = request.body;
   const validatedParagraph = validation.validateParagraph(paragraph, request.story.keywords);
   const invalidRequests = util.getInvalidFormRequests(validatedParagraph);
@@ -114,6 +114,22 @@ export const handlePostStoryParagraph = (request, response) => {
       story: request.story,
       paragraph: { ...validatedParagraph, invalidReqText },
     });
+  } else {
+    const paragraphFmt = validatedParagraph.paragraph.replace(/[\r\n\v]+/g, ' ').split("'").join("''");
+    const newParaQuery = `INSERT INTO paragraphs (created_user_id, last_updated_user_id, story_id, paragraph) VALUES (${request.user.id}, ${request.user.id}, ${request.params.id}, '${paragraphFmt}') RETURNING *`;
+    pool
+      .query(newParaQuery)
+      .then((result) => {
+        response.redirect(`/story/${result.rows[0].story_id}`);
+      })
+      .catch((error) => {
+        const invalidReqText = `Error: ${error.message}`;
+        response.render('add_story_paragraph', {
+          user: request.user,
+          story: request.story,
+          paragraph: { ...validatedParagraph, invalidReqText },
+        });
+      });
   }
 };
 
