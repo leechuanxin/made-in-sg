@@ -6,6 +6,7 @@ import * as util from './util.js';
 const { SALT } = process.env;
 const START_PARA_COUNT = 1;
 const END_PARA_COUNT = 1;
+const KEYWORDS_COUNT = 3;
 const USERNAME_EXISTS_ERROR_MESSAGE = 'Username exists!';
 const LOGIN_FAILED_ERROR_MESSAGE = 'Login failed!';
 const STORY_NOT_FOUND_ERROR_MESSAGE = 'Story not found!';
@@ -75,6 +76,7 @@ export const handlePostNewStory = (pool) => (request, response) => {
 
 export const handleGetStory = (pool) => (request, response) => {
   const { id } = request.params;
+  let story = {};
   const storyQuery = `SELECT stories.id, stories.created_user_id, users.username AS created_username, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id WHERE stories.id=${id}`;
   pool
     .query(storyQuery)
@@ -83,8 +85,21 @@ export const handleGetStory = (pool) => (request, response) => {
         throw new Error(STORY_NOT_FOUND_ERROR_MESSAGE);
       } else {
         const createdUsernameFmt = util.setUiUsername(result.rows[0].created_username);
-        response.render('viewstory', { user: request.user, story: { created_username_fmt: createdUsernameFmt, ...result.rows[0] } });
+        story = {
+          created_username_fmt: createdUsernameFmt, ...result.rows[0],
+        };
+        // get all paragraphs, starting with the earliest
+        const paragraphsQuery = `SELECT * FROM paragraphs WHERE story_id=${id} ORDER BY created_at ASC`;
+        return pool.query(paragraphsQuery);
       }
+    })
+    .then((result) => {
+      const paragraphs = (result.rows.length > 0) ? result.rows : [];
+      story = {
+        ...story,
+        paragraphs,
+      };
+      response.render('viewstory', { user: request.user, story });
     })
     .catch((error) => {
       if (error.message === STORY_NOT_FOUND_ERROR_MESSAGE) {
@@ -119,6 +134,16 @@ export const handlePostStoryParagraph = (pool) => (request, response) => {
     const newParaQuery = `INSERT INTO paragraphs (created_user_id, last_updated_user_id, story_id, paragraph) VALUES (${request.user.id}, ${request.user.id}, ${request.params.id}, '${paragraphFmt}') RETURNING *`;
     pool
       .query(newParaQuery)
+      .then(() => {
+        const keywordsQuery = 'SELECT * FROM keywords';
+        return pool.query(keywordsQuery);
+      })
+      .then((result) => {
+        const keywords = [...result.rows];
+        const values = util.getRandomIds(keywords, KEYWORDS_COUNT);
+        const updateCollabQuery = `UPDATE collaborators_stories SET keyword1_id=$1, keyword2_id=$2, keyword3_id=$3 WHERE collaborator_id=${request.user.id} AND story_id=${request.params.id} RETURNING *`;
+        return pool.query(updateCollabQuery, values);
+      })
       .then((result) => {
         response.redirect(`/story/${result.rows[0].story_id}`);
       })

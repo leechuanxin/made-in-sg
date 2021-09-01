@@ -116,6 +116,17 @@ export const checkStoryCollab = (pool) => (request, response, next) => {
         }
         const createdUsernameFmt = util.setUiUsername(story.created_username);
         story = { ...story, keywords, createdUsernameFmt };
+
+        // get all paragraphs, starting with the earliest
+        const paragraphsQuery = `SELECT * FROM paragraphs WHERE story_id=${id} ORDER BY created_at ASC`;
+        return pool.query(paragraphsQuery);
+      })
+      .then((result) => {
+        const paragraphs = (result.rows.length > 0) ? result.rows : [];
+        story = {
+          ...story,
+          paragraphs,
+        };
         request.story = story;
         next();
       })

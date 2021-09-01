@@ -31,7 +31,28 @@ user, showButton: true }); -%>
       <p class="randomParagraph random-paragraph fs-5 text-black mb-5">
         <%= story.starting_paragraph %>
       </p>
-      <% if (user && user.id) { %>
+      <% story.paragraphs.forEach((paragraph, index) => { %>
+      <p
+        class="
+          userGeneratedParagraph
+          fs-5
+          text-black text-opacity-75
+          <%
+          if
+          (index
+          ===
+          story.paragraphs.length
+          -
+          1)
+          {
+          %>mb-5<%
+          }
+          %>
+        "
+      >
+        <%= paragraph.paragraph %>
+      </p>
+      <% }); %> <% if (user && user.id) { %>
       <div class="col-12">
         <hr />
         <div class="row">
