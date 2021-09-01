@@ -111,7 +111,11 @@ export const handleGetStory = (pool) => (request, response) => {
 };
 
 export const handleGetStoryParagraph = (request, response) => {
-  response.render('add_story_paragraph', { user: request.user, story: request.story, paragraph: {} });
+  const story = {
+    ...request.story,
+    created_username_fmt: request.story.createdUsernameFmt,
+  };
+  response.render('add_story_paragraph', { user: request.user, story, paragraph: {} });
 };
 
 export const handlePostStoryParagraph = (pool) => (request, response) => {
