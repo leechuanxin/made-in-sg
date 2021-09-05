@@ -1,0 +1,122 @@
+<%- include('headers/html-header', {}); -%><%- include('nav/navbar', { user:
+user, showButton: true }); -%>
+<div class="container-fluid d-flex align-items-stretch pt-5">
+  <div class="row align-items-stretch w-100 pt-3">
+    <div class="col-12">
+      <div class="row d-flex align-items-center">
+        <div class="col-12 col-md-6">
+          <h1 class="mb-0 text-center text-md-start"><%= story.title %></h1>
+          <p class="mb-0 text-center text-md-start">
+            <small class="fst-italic"
+              >Authored by: <%= story.created_username_fmt %></small
+            >
+          </p>
+        </div>
+        <%#
+        <div class="col-12 col-md-6 text-center text-md-end">
+          <a class="btn btn-outline-light" href="/sighting/6/edit">Edit</a>
+          <form
+            class="d-inline-block"
+            action="/sighting/6/delete?_method=DELETE"
+            method="POST"
+          >
+            <input class="btn btn-danger" type="submit" value="Delete" />
+          </form>
+        </div>
+        %>
+      </div>
+      <hr />
+    </div>
+    <div class="col-12 pt-2 pb-3">
+      <p class="randomParagraph random-paragraph fs-5 text-black mb-5">
+        <%= story.starting_paragraph %>
+      </p>
+      <% story.paragraphs.forEach((paragraphEl, index) => { %> <% if (paragraphEl.id
+      === story.id) { %>
+      <div class="row">
+        <div class="col-12">
+          <a class="anchor-name" name="add-paragraph"></a>
+          <hr />
+          <form action="/story/<%= story.story_id %>/paragraph/<%= story.id %>" method="POST">
+            <div class="row mb-4">
+              <div class="col-12">
+                <p>
+                  Write a paragraph that includes each of the following words at
+                  least once:
+                </p>
+                <ul>
+                  <% story.keywords.forEach((keyword) => { %>
+                  <li><%= keyword %></li>
+                  <% }); %>
+                </ul>
+              </div>
+              <div class="col-12">
+                <textarea
+                  class="form-control <% if (paragraph && typeof paragraph.invalidReqText === "string" && paragraph.invalidReqText.length > 0) { %>is-invalid<% } %>"
+                  name="paragraph"
+                  rows="5"
+                  placeholder=""
+                ><%= paragraph.paragraph %></textarea>
+                <div class="invalid-feedback"><%= paragraph.invalidReqText %></div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <button class="btn btn-primary btn-lg btn-block" type="submit">
+                  Edit Paragraph
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <hr />
+        </div>  
+      </div>  
+      <% } else { %>
+      <p
+        class="
+          user-generated-paragraph
+          userGeneratedParagraph
+          fs-5
+          text-black text-opacity-75
+          <%
+          if
+          (index
+          ===
+          story.paragraphs.length
+          -
+          1)
+          {
+          %>mb-5<%
+          }
+          %><%
+          if
+          (user
+          &&
+          user.id
+          &&
+          user.id
+          ===
+          paragraph.created_user_id)
+          {
+          %>
+          isOwnParagraph
+          is-own-paragraph<%
+          }
+          %>
+        "
+      >
+        <span
+          class="user-generated-span userGeneratedSpan"
+          ><%= paragraph.paragraph %></span
+        >
+      </p>
+      <% } %> <% }); %>
+      <p class="randomParagraph random-paragraph fs-5 text-black mt-5">
+        <%= story.ending_paragraph %>
+      </p>
+    </div>
+  </div>
+</div>
+
+<%- include('footers/html-footer'); -%>

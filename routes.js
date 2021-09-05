@@ -335,6 +335,9 @@ export const handleGetEditParagraph = (pool) => (request, response) => {
 };
 
 export const handlePostEditParagraph = (pool) => (request, response) => {
+  let validatedParagraph = {};
+  let story = {};
+  let invalidRequests = [];
   if (!request.isUserLoggedIn) {
     const errorMessage = 'You have to be logged in to edit a paragraph!';
     response.render('login', { userInfo: {}, genericSuccess: {}, genericError: { message: errorMessage } });
@@ -349,13 +352,13 @@ export const handlePostEditParagraph = (pool) => (request, response) => {
         } else if (checkStoryParaResult.rows[0].created_user_id !== request.user.id) {
           throw new Error(globals.ACCESS_CONTROL_EDIT_PARAGRAPH_ERROR_MESSAGE);
         } else {
-          const obj = {
+          story = {
             ...checkStoryParaResult.rows[0],
             paragraph: {
               paragraph: checkStoryParaResult.rows[0].paragraph,
             },
           };
-          return Promise.resolve(obj);
+          return Promise.resolve(story);
         }
       })
       // get story
@@ -370,12 +373,12 @@ export const handlePostEditParagraph = (pool) => (request, response) => {
               } else {
                 const createdUsernameFmt = util
                   .setUiUsername(storyQueryResult.rows[0].created_username);
-                const obj = {
+                story = {
                   created_username_fmt: createdUsernameFmt,
                   ...storyQueryResult.rows[0],
                   ...result,
                 };
-                resolve(obj);
+                resolve(story);
               }
             })
             .catch((error) => {
@@ -393,7 +396,7 @@ export const handlePostEditParagraph = (pool) => (request, response) => {
               if (paraKeywordsResult.rows.length < 3) {
                 throw new Error(globals.NO_PARAGRAPH_EXISTS_ERROR_MESSAGE);
               } else {
-                const obj = {
+                story = {
                   ...result,
                   keywordIds: [
                     paraKeywordsResult.rows[0].keyword_id,
@@ -401,7 +404,7 @@ export const handlePostEditParagraph = (pool) => (request, response) => {
                     paraKeywordsResult.rows[2].keyword_id,
                   ],
                 };
-                resolve(obj);
+                resolve(story);
               }
             })
             .catch((error) => {
@@ -417,15 +420,15 @@ export const handlePostEditParagraph = (pool) => (request, response) => {
           pool
             .query(matchKeywordsQuery, keywordIds)
             .then((matchKeywordsResult) => {
-              const obj = {
-                ...result,
+              story = {
+                ...story,
                 keywords: [
                   matchKeywordsResult.rows[0].keyword,
                   matchKeywordsResult.rows[1].keyword,
                   matchKeywordsResult.rows[2].keyword,
                 ],
               };
-              resolve(obj);
+              resolve(story);
             })
             .catch((error) => {
               reject(new Error(error.message));
@@ -446,11 +449,11 @@ export const handlePostEditParagraph = (pool) => (request, response) => {
                 ...paragraph,
                 created_username_fmt: util.setUiUsername(paragraph.created_username),
               }));
-              const obj = {
+              story = {
                 ...result,
                 paragraphs: paragraphsFmt,
               };
-              resolve(obj);
+              resolve(story);
             })
             .catch((error) => {
               reject(new Error(error.message));
@@ -459,8 +462,8 @@ export const handlePostEditParagraph = (pool) => (request, response) => {
       )
       .then((result) => {
         const paragraph = request.body;
-        const validatedParagraph = validation.validateParagraph(paragraph, result.keywords);
-        const invalidRequests = util.getInvalidFormRequests(validatedParagraph);
+        validatedParagraph = validation.validateParagraph(paragraph, result.keywords);
+        invalidRequests = util.getInvalidFormRequests(validatedParagraph);
         if (invalidRequests.length > 0) {
           throw new Error(globals.INVALID_NEW_PARAGRAPH_ERROR_MESSAGE);
         } else {
@@ -479,12 +482,24 @@ export const handlePostEditParagraph = (pool) => (request, response) => {
       .catch((error) => {
         if (error.message === globals.NO_PARAGRAPH_EXISTS_ERROR_MESSAGE) {
           response.status(404).send(`Error 404: ${globals.NO_PARAGRAPH_EXISTS_ERROR_MESSAGE}`);
-        } else if (globals.STORY_NOT_FOUND_ERROR_MESSAGE) {
+        } else if (error.message === globals.STORY_NOT_FOUND_ERROR_MESSAGE) {
           response.status(404).send(`Error 404: ${globals.STORY_NOT_FOUND_ERROR_MESSAGE}`);
         } else if (error.message === globals.ACCESS_CONTROL_EDIT_PARAGRAPH_ERROR_MESSAGE) {
           response.status(404).send(`Error 401: ${globals.ACCESS_CONTROL_EDIT_PARAGRAPH_ERROR_MESSAGE}`);
         } else {
-          response.send(`Error: ${error.message}`);
+          let invalidReqText = '';
+          if (error.message === globals.INVALID_NEW_PARAGRAPH_ERROR_MESSAGE) {
+            invalidReqText = invalidRequests.map((req) => validatedParagraph[req]).join(' ');
+          } else {
+            invalidReqText = `Error: ${error.message}`;
+          }
+
+          const obj = {
+            user: request.user,
+            story,
+            paragraph: { ...validatedParagraph, invalidReqText },
+          };
+          response.render('editparagraph', obj);
         }
       });
   }
