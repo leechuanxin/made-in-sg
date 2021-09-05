@@ -315,7 +315,6 @@ export const handleGetEditParagraph = (pool) => (request, response) => {
             });
         }),
       )
-      // get starting paragraph
       // render
       .then((result) => {
         const obj = { user: request.user, story: result, paragraph: result.paragraph };
@@ -324,6 +323,164 @@ export const handleGetEditParagraph = (pool) => (request, response) => {
       .catch((error) => {
         if (error.message === globals.NO_PARAGRAPH_EXISTS_ERROR_MESSAGE) {
           response.status(404).send(`Error 404: ${globals.NO_PARAGRAPH_EXISTS_ERROR_MESSAGE}`);
+        } else if (globals.STORY_NOT_FOUND_ERROR_MESSAGE) {
+          response.status(404).send(`Error 404: ${globals.STORY_NOT_FOUND_ERROR_MESSAGE}`);
+        } else if (error.message === globals.ACCESS_CONTROL_EDIT_PARAGRAPH_ERROR_MESSAGE) {
+          response.status(404).send(`Error 401: ${globals.ACCESS_CONTROL_EDIT_PARAGRAPH_ERROR_MESSAGE}`);
+        } else {
+          response.send(`Error: ${error.message}`);
+        }
+      });
+  }
+};
+
+export const handlePostEditParagraph = (pool) => (request, response) => {
+  if (!request.isUserLoggedIn) {
+    const errorMessage = 'You have to be logged in to edit a paragraph!';
+    response.render('login', { userInfo: {}, genericSuccess: {}, genericError: { message: errorMessage } });
+  } else {
+    const checkStoryParaQuery = `SELECT * FROM paragraphs WHERE id=${request.params.paragraphId} AND story_id=${request.params.storyId}`;
+    pool
+      .query(checkStoryParaQuery)
+      // check access control, or if paragraph exists in story
+      .then((checkStoryParaResult) => {
+        if (checkStoryParaResult.rows.length === 0) {
+          throw new Error(globals.NO_PARAGRAPH_EXISTS_ERROR_MESSAGE);
+        } else if (checkStoryParaResult.rows[0].created_user_id !== request.user.id) {
+          throw new Error(globals.ACCESS_CONTROL_EDIT_PARAGRAPH_ERROR_MESSAGE);
+        } else {
+          const obj = {
+            ...checkStoryParaResult.rows[0],
+            paragraph: {
+              paragraph: checkStoryParaResult.rows[0].paragraph,
+            },
+          };
+          return Promise.resolve(obj);
+        }
+      })
+      // get story
+      .then(
+        (result) => new Promise((resolve, reject) => {
+          const storyQuery = `SELECT stories.created_user_id, users.username AS created_username, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id WHERE stories.id=${request.params.storyId}`;
+          pool
+            .query(storyQuery)
+            .then((storyQueryResult) => {
+              if (storyQueryResult.rows.length === 0) {
+                throw new Error(globals.STORY_NOT_FOUND_ERROR_MESSAGE);
+              } else {
+                const createdUsernameFmt = util
+                  .setUiUsername(storyQueryResult.rows[0].created_username);
+                const obj = {
+                  created_username_fmt: createdUsernameFmt,
+                  ...storyQueryResult.rows[0],
+                  ...result,
+                };
+                resolve(obj);
+              }
+            })
+            .catch((error) => {
+              reject(new Error(error.message));
+            });
+        }),
+      )
+      // get keyword ids
+      .then(
+        (result) => new Promise((resolve, reject) => {
+          const paraKeywordsQuery = `SELECT * FROM paragraphs_keywords WHERE paragraph_id=${result.id}`;
+          pool
+            .query(paraKeywordsQuery)
+            .then((paraKeywordsResult) => {
+              if (paraKeywordsResult.rows.length < 3) {
+                throw new Error(globals.NO_PARAGRAPH_EXISTS_ERROR_MESSAGE);
+              } else {
+                const obj = {
+                  ...result,
+                  keywordIds: [
+                    paraKeywordsResult.rows[0].keyword_id,
+                    paraKeywordsResult.rows[1].keyword_id,
+                    paraKeywordsResult.rows[2].keyword_id,
+                  ],
+                };
+                resolve(obj);
+              }
+            })
+            .catch((error) => {
+              reject(new Error(error.message));
+            });
+        }),
+      )
+      // match keyword ids with text
+      .then(
+        (result) => new Promise((resolve, reject) => {
+          const { keywordIds } = result;
+          const matchKeywordsQuery = 'SELECT * FROM keywords WHERE id=$1 OR id=$2 OR id=$3';
+          pool
+            .query(matchKeywordsQuery, keywordIds)
+            .then((matchKeywordsResult) => {
+              const obj = {
+                ...result,
+                keywords: [
+                  matchKeywordsResult.rows[0].keyword,
+                  matchKeywordsResult.rows[1].keyword,
+                  matchKeywordsResult.rows[2].keyword,
+                ],
+              };
+              resolve(obj);
+            })
+            .catch((error) => {
+              reject(new Error(error.message));
+            });
+        }),
+      )
+      // get all paragraphs
+      .then(
+        (result) => new Promise((resolve, reject) => {
+          const paragraphsQuery = `SELECT paragraphs.id, paragraphs.created_user_id, users.username AS created_username, paragraphs.last_updated_user_id, paragraphs.story_id, paragraphs.paragraph FROM paragraphs INNER JOIN users ON users.id=paragraphs.created_user_id WHERE story_id=${request.params.storyId} ORDER BY id ASC`;
+          pool
+            .query(paragraphsQuery)
+            .then((paragraphsQueryResult) => {
+              const paragraphs = (paragraphsQueryResult.rows.length > 0)
+                ? paragraphsQueryResult.rows
+                : [];
+              const paragraphsFmt = paragraphs.map((paragraph) => ({
+                ...paragraph,
+                created_username_fmt: util.setUiUsername(paragraph.created_username),
+              }));
+              const obj = {
+                ...result,
+                paragraphs: paragraphsFmt,
+              };
+              resolve(obj);
+            })
+            .catch((error) => {
+              reject(new Error(error.message));
+            });
+        }),
+      )
+      .then((result) => {
+        const paragraph = request.body;
+        const validatedParagraph = validation.validateParagraph(paragraph, result.keywords);
+        const invalidRequests = util.getInvalidFormRequests(validatedParagraph);
+        if (invalidRequests.length > 0) {
+          throw new Error(globals.INVALID_NEW_PARAGRAPH_ERROR_MESSAGE);
+        } else {
+          const paragraphFmt = validatedParagraph.paragraph.replace(/[\r\n\v]+/g, ' ').split("'").join("''");
+          const newParaQuery = `UPDATE paragraphs SET paragraph='${paragraphFmt}' WHERE id=${request.params.paragraphId} RETURNING *`;
+          pool
+            .query(newParaQuery)
+            .then((newParaQueryResult) => {
+              response.redirect(`/story/${newParaQueryResult.rows[0].story_id}`);
+            })
+            .catch((error) => {
+              throw new Error(`${error.message}`);
+            });
+        }
+      })
+      .catch((error) => {
+        if (error.message === globals.NO_PARAGRAPH_EXISTS_ERROR_MESSAGE) {
+          response.status(404).send(`Error 404: ${globals.NO_PARAGRAPH_EXISTS_ERROR_MESSAGE}`);
+        } else if (globals.STORY_NOT_FOUND_ERROR_MESSAGE) {
+          response.status(404).send(`Error 404: ${globals.STORY_NOT_FOUND_ERROR_MESSAGE}`);
         } else if (error.message === globals.ACCESS_CONTROL_EDIT_PARAGRAPH_ERROR_MESSAGE) {
           response.status(404).send(`Error 401: ${globals.ACCESS_CONTROL_EDIT_PARAGRAPH_ERROR_MESSAGE}`);
         } else {
