@@ -1,7 +1,7 @@
 // CUSTOM IMPORTS
 import * as validation from './validation.js';
 import * as util from './util.js';
-import checkStoryCollab from './promises.js';
+import getOrSetStoryCollab from './promises.js';
 import * as globals from './globals.js';
 
 export const handleIndex = (pool) => (request, response) => {
@@ -107,11 +107,10 @@ export const handleGetStoryParagraph = (pool) => (request, response) => {
   if (!request.isUserLoggedIn) {
     response.redirect('/login');
   } else {
-    checkStoryCollab(pool, request, response)
+    getOrSetStoryCollab(pool, request)
       .then((result) => {
         const story = {
           ...result,
-          created_username_fmt: result.createdUsernameFmt,
         };
         response.render('add_story_paragraph', { user: request.user, story, paragraph: {} });
       })
@@ -133,14 +132,13 @@ export const handlePostStoryParagraph = (pool) => (request, response) => {
     let invalidRequests = [];
     let validatedParagraph = {};
     let story = {};
-    checkStoryCollab(pool, request, response)
+    getOrSetStoryCollab(pool, request)
       .then((result) => {
         const paragraph = request.body;
         story = result;
         validatedParagraph = validation.validateParagraph(paragraph, result.keywords);
         invalidRequests = util.getInvalidFormRequests(validatedParagraph);
         if (invalidRequests.length > 0) {
-          console.log('more than 1 invalid req');
           throw new Error(globals.INVALID_NEW_PARAGRAPH_ERROR_MESSAGE);
         } else {
           const paragraphFmt = validatedParagraph.paragraph.replace(/[\r\n\v]+/g, ' ').split("'").join("''");
@@ -172,7 +170,6 @@ export const handlePostStoryParagraph = (pool) => (request, response) => {
         } else {
           invalidReqText = `Error: ${error.message}`;
         }
-        console.log('validatedParagraph:', validatedParagraph);
         response.render('add_story_paragraph', {
           user: request.user,
           story,
