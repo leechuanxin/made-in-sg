@@ -43,11 +43,11 @@ a.card-link {
 }
 
 .user-generated-paragraph.is-own-paragraph a {
-  background: #fff9c4;
+  background: #fffde7;
 }
 
 .user-generated-paragraph.is-own-paragraph a:hover {
-  background: #fff176;
+  background: #fff9c4;
 }
 
 .popover {
