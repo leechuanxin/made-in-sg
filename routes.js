@@ -145,6 +145,16 @@ export const handlePostStoryParagraph = (pool) => (request, response) => {
           const newParaQuery = `INSERT INTO paragraphs (created_user_id, last_updated_user_id, story_id, paragraph) VALUES (${request.user.id}, ${request.user.id}, ${request.params.id}, '${paragraphFmt}') RETURNING *`;
           pool
             .query(newParaQuery)
+            .then((newParaQueryResult) => {
+              const newParaId = newParaQueryResult.rows[0].id;
+              const newParaKeywordIds = [
+                result.collab_story_info.keyword1_id,
+                result.collab_story_info.keyword2_id,
+                result.collab_story_info.keyword3_id,
+              ];
+              const newParaKeywordQuery = `INSERT INTO paragraphs_keywords (paragraph_id, keyword_id) VALUES (${newParaId}, $1), (${newParaId}, $2), (${newParaId}, $3)`;
+              return pool.query(newParaKeywordQuery, newParaKeywordIds);
+            })
             .then(() => {
               const keywordsQuery = 'SELECT * FROM keywords';
               return pool.query(keywordsQuery);
