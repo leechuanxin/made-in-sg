@@ -1,5 +1,6 @@
 const allPopovers = document.querySelectorAll('[data-bs-toggle="popover"]');
 const popoverTriggerList = [].slice.call(allPopovers);
+const allAnchorNames = document.querySelectorAll('.anchor-name');
 const popoverList = popoverTriggerList.map(
   (popoverTriggerEl) => {
     const createdUserId = popoverTriggerEl.getAttribute('data-createdUserId');
@@ -10,7 +11,7 @@ const popoverList = popoverTriggerList.map(
     let buttonString = '';
     if (createdUserId === currentUserId) {
       createdUserName = 'You!';
-      buttonString = `<hr /><a class="btn btn-primary w-100" href="/story/${storyId}/paragraph/${paragraphId}#add-paragraph" role="button">Edit</a>`;
+      buttonString = `<hr /><a class="btn btn-primary w-100" href="/story/${storyId}/paragraph/${paragraphId}" role="button">Edit</a>`;
     } else {
       createdUserName = popoverTriggerEl.getAttribute('data-createdUserName');
     }
@@ -26,3 +27,7 @@ const popoverList = popoverTriggerList.map(
     );
   },
 );
+
+if (allAnchorNames.length > 0) {
+  document.querySelector('.anchor-name').scrollIntoView({ behavior: 'smooth' });
+}
