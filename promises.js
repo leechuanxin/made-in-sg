@@ -110,14 +110,18 @@ const getKeywordsText = (pool) => (result) => new Promise((resolve, reject) => {
 });
 
 const getAllParagraphs = (pool) => (result) => new Promise((resolve, reject) => {
-  const paragraphsQuery = `SELECT * FROM paragraphs WHERE story_id=${result.id} ORDER BY id ASC`;
+  const paragraphsQuery = `SELECT paragraphs.id, paragraphs.created_user_id, users.username AS created_username, paragraphs.last_updated_user_id, paragraphs.story_id, paragraphs.paragraph FROM paragraphs INNER JOIN users ON users.id=paragraphs.created_user_id WHERE story_id=${result.id} ORDER BY id ASC`;
   pool
     .query(paragraphsQuery)
     .then((paragraphsQueryResult) => {
       const paragraphs = (paragraphsQueryResult.rows.length > 0) ? paragraphsQueryResult.rows : [];
+      const paragraphsFmt = paragraphs.map((paragraph) => ({
+        ...paragraph,
+        created_username_fmt: util.setUiUsername(paragraph.created_username),
+      }));
       const newResult = {
         ...result,
-        paragraphs,
+        paragraphs: paragraphsFmt,
       };
       resolve(newResult);
     })

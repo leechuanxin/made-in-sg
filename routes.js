@@ -82,15 +82,19 @@ export const handleGetStory = (pool) => (request, response) => {
           created_username_fmt: createdUsernameFmt, ...result.rows[0],
         };
         // get all paragraphs, starting with the earliest
-        const paragraphsQuery = `SELECT * FROM paragraphs WHERE story_id=${id} ORDER BY created_at ASC`;
+        const paragraphsQuery = `SELECT paragraphs.id, paragraphs.created_user_id, users.username AS created_username, paragraphs.last_updated_user_id, paragraphs.story_id, paragraphs.paragraph FROM paragraphs INNER JOIN users ON users.id=paragraphs.created_user_id WHERE story_id=${id} ORDER BY id ASC`;
         return pool.query(paragraphsQuery);
       }
     })
     .then((result) => {
       const paragraphs = (result.rows.length > 0) ? result.rows : [];
+      const paragraphsFmt = paragraphs.map((paragraph) => ({
+        ...paragraph,
+        created_username_fmt: util.setUiUsername(paragraph.created_username),
+      }));
       story = {
         ...story,
-        paragraphs,
+        paragraphs: paragraphsFmt,
       };
       response.render('viewstory', { user: request.user, story });
     })
