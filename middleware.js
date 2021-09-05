@@ -90,8 +90,12 @@ export const checkStoryCollab = (pool) => (request, response, next) => {
         const keywords = [...result.rows];
         let nextQuery = '';
         if (Object.keys(collabInfo).length > 0) {
-          nextQuery = `SELECT * FROM collaborators_stories WHERE collaborator_id=${collabInfo.collaborator_id} AND story_id=${collabInfo.story_id}`;
-          return pool.query(nextQuery);
+          // return promise in the form of result.rows[]
+          return Promise.resolve({
+            rows: [
+              { ...collabInfo },
+            ],
+          });
         }
         const values = util.getRandomIds(keywords, KEYWORDS_COUNT);
         nextQuery = `INSERT INTO collaborators_stories (collaborator_id, story_id, keyword1_id, keyword2_id, keyword3_id) VALUES (${request.user.id}, ${id}, $1, $2, $3) RETURNING *`;
