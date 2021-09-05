@@ -34,6 +34,7 @@ user, showButton: true }); -%>
       <% story.paragraphs.forEach((paragraph, index) => { %>
       <p
         class="
+          user-generated-paragraph
           userGeneratedParagraph
           fs-5
           text-black text-opacity-75
@@ -47,10 +48,35 @@ user, showButton: true }); -%>
           {
           %>mb-5<%
           }
+          %><%
+          if
+          (user
+          &&
+          user.id
+          &&
+          user.id
+          ===
+          paragraph.created_user_id)
+          {
+          %>
+          isOwnParagraph
+          is-own-paragraph<%
+          }
           %>
         "
       >
-        <%= paragraph.paragraph %>
+        <a
+          class="user-generated-span userGeneratedSpan"
+          tabindex="<%= index %>"
+          data-bs-trigger="focus"
+          data-storyId="<%= paragraph.story_id %>"
+          data-paragraphId="<%= paragraph.id %>"
+          data-createdUserId="<%= paragraph.created_user_id %>"
+          data-currentUserId="<%= user.id %>"
+          data-createdUserName="<%= paragraph.created_username_fmt %>"
+          data-bs-toggle="popover"
+          ><%= paragraph.paragraph %></a
+        >
       </p>
       <% }); %> <% if (user && user.id) { %>
       <div class="col-12">

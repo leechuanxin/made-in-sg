@@ -31,3 +31,25 @@ a.card-link {
   top: -130px;
   visibility: hidden;
 }
+
+.user-generated-paragraph a {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.user-generated-paragraph a:hover {
+  background: #eeeeee;
+}
+
+.user-generated-paragraph.is-own-paragraph a {
+  background: #fff9c4;
+}
+
+.user-generated-paragraph.is-own-paragraph a:hover {
+  background: #fff176;
+}
+
+.popover {
+  z-index: 1029;
+}
