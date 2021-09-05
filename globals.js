@@ -8,3 +8,5 @@ export const USERNAME_EXISTS_ERROR_MESSAGE = 'Username exists!';
 export const LOGIN_FAILED_ERROR_MESSAGE = 'Login failed!';
 export const STORY_NOT_FOUND_ERROR_MESSAGE = 'Story not found!';
 export const INVALID_NEW_PARAGRAPH_ERROR_MESSAGE = 'Invalid new paragraph!';
+export const NO_PARAGRAPH_EXISTS_ERROR_MESSAGE = 'Paragraph does not exist!';
+export const ACCESS_CONTROL_EDIT_PARAGRAPH_ERROR_MESSAGE = 'Only the creator of this paragraph can edit it!';

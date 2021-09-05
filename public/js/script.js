@@ -10,7 +10,7 @@ const popoverList = popoverTriggerList.map(
     let buttonString = '';
     if (createdUserId === currentUserId) {
       createdUserName = 'You!';
-      buttonString = `<hr /><a class="btn btn-primary w-100" href="/story/${storyId}/paragraph/${paragraphId}" role="button">Edit</a>`;
+      buttonString = `<hr /><a class="btn btn-primary w-100" href="/story/${storyId}/paragraph/${paragraphId}#add-paragraph" role="button">Edit</a>`;
     } else {
       createdUserName = popoverTriggerEl.getAttribute('data-createdUserName');
     }
