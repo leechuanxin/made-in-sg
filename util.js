@@ -1,8 +1,7 @@
 import jsSHA from 'jssha';
 
-// GLOBAL CONSTANTS
-const { SALT } = process.env;
-const STORY_SUMMARY_CHAR_LIMIT = 155;
+// CUSTOM IMPORTS
+import * as globals from './globals.js';
 
 export const getHash = (input) => {
   // create new SHA object
@@ -10,7 +9,7 @@ export const getHash = (input) => {
   const shaObj = new jsSHA('SHA-512', 'TEXT', { encoding: 'UTF8' });
 
   // create an unhashed cookie string based on user ID and salt
-  const unhashedString = `${input}-${SALT}`;
+  const unhashedString = `${input}-${globals.SALT}`;
 
   // generate a hashed cookie string using SHA object
   shaObj.update(unhashedString);
@@ -48,8 +47,8 @@ export const setUiUsername = (username) => username
   .join('-');
 
 export const setStorySummary = (paragraph) => {
-  if (paragraph.length > STORY_SUMMARY_CHAR_LIMIT) {
-    return paragraph.substring(0, STORY_SUMMARY_CHAR_LIMIT + 1).concat('...');
+  if (paragraph.length > globals.STORY_SUMMARY_CHAR_LIMIT) {
+    return paragraph.substring(0, globals.STORY_SUMMARY_CHAR_LIMIT + 1).concat('...');
   }
 
   return paragraph;

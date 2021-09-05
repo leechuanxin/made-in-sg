@@ -1,9 +1,6 @@
+// CUSTOM IMPORTS
 import * as util from './util.js';
-
-// GLOBAL CONSTANTS
-const { SALT } = process.env;
-const KEYWORDS_COUNT = 3;
-const STORY_NOT_FOUND_ERROR_MESSAGE = 'Story not found!';
+import * as globals from './globals.js';
 
 export const auth = (pool) => (request, response, next) => {
   // set the default value
@@ -12,7 +9,7 @@ export const auth = (pool) => (request, response, next) => {
   // check to see if the cookies you need exists
   if (request.cookies.loggedIn && request.cookies.userId) {
     // create an unhashed cookie string based on user ID and salt
-    const unhashedCookieString = `${request.cookies.userId}-${SALT}`;
+    const unhashedCookieString = `${request.cookies.userId}-${globals.SALT}`;
     // get the hashed value that should be inside the cookie
     const hash = util.getHash(unhashedCookieString);
 
@@ -63,7 +60,7 @@ export const checkStoryCollab = (pool) => (request, response, next) => {
       // check if current user is already a collaborator in story
       .then((result) => {
         if (result.rows.length === 0) {
-          throw new Error(STORY_NOT_FOUND_ERROR_MESSAGE);
+          throw new Error(globals.STORY_NOT_FOUND_ERROR_MESSAGE);
         } else {
           if (result.rows.length > 0) {
             story = { ...result.rows[0] };
@@ -97,7 +94,7 @@ export const checkStoryCollab = (pool) => (request, response, next) => {
             ],
           });
         }
-        const values = util.getRandomIds(keywords, KEYWORDS_COUNT);
+        const values = util.getRandomIds(keywords, globals.KEYWORDS_COUNT);
         nextQuery = `INSERT INTO collaborators_stories (collaborator_id, story_id, keyword1_id, keyword2_id, keyword3_id) VALUES (${request.user.id}, ${id}, $1, $2, $3) RETURNING *`;
         return pool.query(nextQuery, values);
       })
@@ -135,8 +132,8 @@ export const checkStoryCollab = (pool) => (request, response, next) => {
         next();
       })
       .catch((error) => {
-        if (error.message === STORY_NOT_FOUND_ERROR_MESSAGE) {
-          response.status(404).send(`Error 404: ${STORY_NOT_FOUND_ERROR_MESSAGE}`);
+        if (error.message === globals.STORY_NOT_FOUND_ERROR_MESSAGE) {
+          response.status(404).send(`Error 404: ${globals.STORY_NOT_FOUND_ERROR_MESSAGE}`);
         } else {
           response.send(`Error: ${error.message}`);
         }

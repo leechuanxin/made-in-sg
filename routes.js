@@ -1,15 +1,8 @@
 // CUSTOM IMPORTS
 import * as validation from './validation.js';
 import * as util from './util.js';
-
-// GLOBAL CONSTANTS
-const { SALT } = process.env;
-const START_PARA_COUNT = 1;
-const END_PARA_COUNT = 1;
-const KEYWORDS_COUNT = 3;
-const USERNAME_EXISTS_ERROR_MESSAGE = 'Username exists!';
-const LOGIN_FAILED_ERROR_MESSAGE = 'Login failed!';
-const STORY_NOT_FOUND_ERROR_MESSAGE = 'Story not found!';
+import checkStoryCollab from './promises.js';
+import * as globals from './globals.js';
 
 export const handleIndex = (pool) => (request, response) => {
   // retrieve all stories, sorted latest (created) first
@@ -55,12 +48,12 @@ export const handlePostNewStory = (pool) => (request, response) => {
       .query(startParaQuery)
       .then((result) => {
         const startParas = [...result.rows];
-        randomStartParaId = util.getRandomIds(startParas, START_PARA_COUNT);
+        randomStartParaId = util.getRandomIds(startParas, globals.START_PARA_COUNT);
         return pool.query(endParaQuery);
       })
       .then((result) => {
         const endParas = [...result.rows];
-        randomEndParaId = util.getRandomIds(endParas, END_PARA_COUNT);
+        randomEndParaId = util.getRandomIds(endParas, globals.END_PARA_COUNT);
         const titleFmt = validatedStory.title.split("'").join("''");
         const newStoryQuery = `INSERT INTO stories (created_user_id, last_updated_user_id, starting_paragraph_id, ending_paragraph_id, title) VALUES (${request.user.id}, ${request.user.id}, ${randomStartParaId}, ${randomEndParaId}, '${titleFmt}') RETURNING *`;
         return pool.query(newStoryQuery);
@@ -82,7 +75,7 @@ export const handleGetStory = (pool) => (request, response) => {
     .query(storyQuery)
     .then((result) => {
       if (result.rows.length === 0) {
-        throw new Error(STORY_NOT_FOUND_ERROR_MESSAGE);
+        throw new Error(globals.STORY_NOT_FOUND_ERROR_MESSAGE);
       } else {
         const createdUsernameFmt = util.setUiUsername(result.rows[0].created_username);
         story = {
@@ -102,20 +95,34 @@ export const handleGetStory = (pool) => (request, response) => {
       response.render('viewstory', { user: request.user, story });
     })
     .catch((error) => {
-      if (error.message === STORY_NOT_FOUND_ERROR_MESSAGE) {
-        response.status(404).send(`Error 404: ${STORY_NOT_FOUND_ERROR_MESSAGE}`);
+      if (error.message === globals.STORY_NOT_FOUND_ERROR_MESSAGE) {
+        response.status(404).send(`Error 404: ${globals.STORY_NOT_FOUND_ERROR_MESSAGE}`);
       } else {
         response.send(`Error: ${error.message}`);
       }
     });
 };
 
-export const handleGetStoryParagraph = (request, response) => {
-  const story = {
-    ...request.story,
-    created_username_fmt: request.story.createdUsernameFmt,
-  };
-  response.render('add_story_paragraph', { user: request.user, story, paragraph: {} });
+export const handleGetStoryParagraph = (pool) => (request, response) => {
+  if (!request.isUserLoggedIn) {
+    response.redirect('/login');
+  } else {
+    checkStoryCollab(pool, request, response)
+      .then((result) => {
+        const story = {
+          ...result,
+          created_username_fmt: result.createdUsernameFmt,
+        };
+        response.render('add_story_paragraph', { user: request.user, story, paragraph: {} });
+      })
+      .catch((error) => {
+        if (error.message === globals.STORY_NOT_FOUND_ERROR_MESSAGE) {
+          response.status(404).send(`Error 404: ${globals.STORY_NOT_FOUND_ERROR_MESSAGE}`);
+        } else {
+          response.send(`Error: ${error.message}`);
+        }
+      });
+  }
 };
 
 export const handlePostStoryParagraph = (pool) => (request, response) => {
@@ -144,7 +151,7 @@ export const handlePostStoryParagraph = (pool) => (request, response) => {
       })
       .then((result) => {
         const keywords = [...result.rows];
-        const values = util.getRandomIds(keywords, KEYWORDS_COUNT);
+        const values = util.getRandomIds(keywords, globals.KEYWORDS_COUNT);
         const updateCollabQuery = `UPDATE collaborators_stories SET keyword1_id=$1, keyword2_id=$2, keyword3_id=$3 WHERE collaborator_id=${request.user.id} AND story_id=${request.params.id} RETURNING *`;
         return pool.query(updateCollabQuery, values);
       })
@@ -190,7 +197,7 @@ export const handlePostSignup = (pool) => (request, response) => {
       .query(usernameQuery)
       .then((result) => {
         if (result.rows.length > 0) {
-          throw new Error(USERNAME_EXISTS_ERROR_MESSAGE);
+          throw new Error(globals.USERNAME_EXISTS_ERROR_MESSAGE);
         } else {
           const values = [username, hashedPassword];
           const newUserQuery = 'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING *';
@@ -203,7 +210,7 @@ export const handlePostSignup = (pool) => (request, response) => {
       })
       .catch((error) => {
         let errorMessage = '';
-        if (error.message === USERNAME_EXISTS_ERROR_MESSAGE) {
+        if (error.message === globals.USERNAME_EXISTS_ERROR_MESSAGE) {
           errorMessage = 'There has been an error. Please try registering again with a proper name and password.';
         } else {
           errorMessage = error.message;
@@ -247,7 +254,7 @@ export const handlePostLogin = (pool) => (request, response) => {
           // the error for password and user are the same.
           // don't tell the user which error they got for security reasons,
           // otherwise people can guess if a person is a user of a given service.
-          throw new Error(LOGIN_FAILED_ERROR_MESSAGE);
+          throw new Error(globals.LOGIN_FAILED_ERROR_MESSAGE);
         } else {
           // get user record from results
           const user = result.rows[0];
@@ -259,10 +266,10 @@ export const handlePostLogin = (pool) => (request, response) => {
             // the error for incorrect email and incorrect password
             // are the same for security reasons.
             // This is to prevent detection of whether a user has an account for a given service.
-            throw new Error(LOGIN_FAILED_ERROR_MESSAGE);
+            throw new Error(globals.LOGIN_FAILED_ERROR_MESSAGE);
           } else {
             // create an unhashed cookie string based on user ID and salt
-            const unhashedCookieString = `${result.rows[0].id}-${SALT}`;
+            const unhashedCookieString = `${result.rows[0].id}-${globals.SALT}`;
             // generate a hashed cookie string using SHA object
             const hashedCookieString = util.getHash(unhashedCookieString);
             // set the loggedIn and userId cookies in the response
@@ -275,7 +282,7 @@ export const handlePostLogin = (pool) => (request, response) => {
       })
       .catch((error) => {
         let errorMessage = '';
-        if (error.message === LOGIN_FAILED_ERROR_MESSAGE) {
+        if (error.message === globals.LOGIN_FAILED_ERROR_MESSAGE) {
           errorMessage = 'There has been an error. Please ensure that you have the correct name or password.';
         } else {
           errorMessage = error.message;
