@@ -126,43 +126,56 @@ export const handleGetStoryParagraph = (pool) => (request, response) => {
 };
 
 export const handlePostStoryParagraph = (pool) => (request, response) => {
-  const paragraph = request.body;
-  const validatedParagraph = validation.validateParagraph(paragraph, request.story.keywords);
-  const invalidRequests = util.getInvalidFormRequests(validatedParagraph);
-
   if (!request.isUserLoggedIn) {
     const errorMessage = 'You have to be logged in to add a new paragraph!';
     response.render('login', { userInfo: {}, genericSuccess: {}, genericError: { message: errorMessage } });
-  } else if (invalidRequests.length > 0) {
-    const invalidReqText = invalidRequests.map((req) => validatedParagraph[req]).join(' ');
-    response.render('add_story_paragraph', {
-      user: request.user,
-      story: request.story,
-      paragraph: { ...validatedParagraph, invalidReqText },
-    });
   } else {
-    const paragraphFmt = validatedParagraph.paragraph.replace(/[\r\n\v]+/g, ' ').split("'").join("''");
-    const newParaQuery = `INSERT INTO paragraphs (created_user_id, last_updated_user_id, story_id, paragraph) VALUES (${request.user.id}, ${request.user.id}, ${request.params.id}, '${paragraphFmt}') RETURNING *`;
-    pool
-      .query(newParaQuery)
-      .then(() => {
-        const keywordsQuery = 'SELECT * FROM keywords';
-        return pool.query(keywordsQuery);
-      })
+    let invalidRequests = [];
+    let validatedParagraph = {};
+    let story = {};
+    checkStoryCollab(pool, request, response)
       .then((result) => {
-        const keywords = [...result.rows];
-        const values = util.getRandomIds(keywords, globals.KEYWORDS_COUNT);
-        const updateCollabQuery = `UPDATE collaborators_stories SET keyword1_id=$1, keyword2_id=$2, keyword3_id=$3 WHERE collaborator_id=${request.user.id} AND story_id=${request.params.id} RETURNING *`;
-        return pool.query(updateCollabQuery, values);
-      })
-      .then((result) => {
-        response.redirect(`/story/${result.rows[0].story_id}`);
+        const paragraph = request.body;
+        story = result;
+        validatedParagraph = validation.validateParagraph(paragraph, result.keywords);
+        invalidRequests = util.getInvalidFormRequests(validatedParagraph);
+        if (invalidRequests.length > 0) {
+          console.log('more than 1 invalid req');
+          throw new Error(globals.INVALID_NEW_PARAGRAPH_ERROR_MESSAGE);
+        } else {
+          const paragraphFmt = validatedParagraph.paragraph.replace(/[\r\n\v]+/g, ' ').split("'").join("''");
+          const newParaQuery = `INSERT INTO paragraphs (created_user_id, last_updated_user_id, story_id, paragraph) VALUES (${request.user.id}, ${request.user.id}, ${request.params.id}, '${paragraphFmt}') RETURNING *`;
+          pool
+            .query(newParaQuery)
+            .then(() => {
+              const keywordsQuery = 'SELECT * FROM keywords';
+              return pool.query(keywordsQuery);
+            })
+            .then((keywordsQueryResult) => {
+              const keywords = [...keywordsQueryResult.rows];
+              const values = util.getRandomIds(keywords, globals.KEYWORDS_COUNT);
+              const updateCollabQuery = `UPDATE collaborators_stories SET keyword1_id=$1, keyword2_id=$2, keyword3_id=$3 WHERE collaborator_id=${request.user.id} AND story_id=${request.params.id} RETURNING *`;
+              return pool.query(updateCollabQuery, values);
+            })
+            .then((updateCollabQueryResult) => {
+              response.redirect(`/story/${updateCollabQueryResult.rows[0].story_id}`);
+            })
+            .catch((error) => {
+              throw new Error(`${error.message}`);
+            });
+        }
       })
       .catch((error) => {
-        const invalidReqText = `Error: ${error.message}`;
+        let invalidReqText = '';
+        if (error.message === globals.INVALID_NEW_PARAGRAPH_ERROR_MESSAGE) {
+          invalidReqText = invalidRequests.map((req) => validatedParagraph[req]).join(' ');
+        } else {
+          invalidReqText = `Error: ${error.message}`;
+        }
+        console.log('validatedParagraph:', validatedParagraph);
         response.render('add_story_paragraph', {
           user: request.user,
-          story: request.story,
+          story,
           paragraph: { ...validatedParagraph, invalidReqText },
         });
       });
