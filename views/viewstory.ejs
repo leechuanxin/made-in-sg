@@ -88,6 +88,7 @@ user, showButton: true, pageState: "" }); -%>
           data-bs-trigger="focus"
           data-storyId="<%= paragraph.story_id %>"
           data-paragraphId="<%= paragraph.id %>"
+          data-storyUserId="<%= story.created_user_id %>"
           data-createdUserId="<%= paragraph.created_user_id %>"
           data-currentUserId="<% if (user && user.id) { %><%= user.id %><% } else { %>0<% } %>"
           data-createdUserName="<%= paragraph.created_username_fmt %>"

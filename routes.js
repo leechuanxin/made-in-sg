@@ -256,14 +256,17 @@ export const handleGetEditParagraph = (pool) => (request, response) => {
   if (!request.isUserLoggedIn) {
     response.redirect('/login');
   } else {
-    const checkStoryParaQuery = `SELECT * FROM paragraphs WHERE id=${request.params.paragraphId} AND story_id=${request.params.storyId}`;
+    const checkStoryParaQuery = `SELECT paragraphs.id, paragraphs.created_user_id, paragraphs.last_updated_user_id, paragraphs.created_at, paragraphs.last_updated_at, paragraphs.story_id, paragraphs.paragraph, stories.created_user_id AS story_creator_id FROM paragraphs INNER JOIN stories ON paragraphs.story_id = stories.id WHERE paragraphs.id=${request.params.paragraphId} AND paragraphs.story_id=${request.params.storyId}`;
     pool
       .query(checkStoryParaQuery)
       // check access control, or if paragraph exists in story
       .then((checkStoryParaResult) => {
         if (checkStoryParaResult.rows.length === 0) {
           throw new Error(globals.NO_PARAGRAPH_EXISTS_ERROR_MESSAGE);
-        } else if (checkStoryParaResult.rows[0].created_user_id !== request.user.id) {
+        } else if (
+          checkStoryParaResult.rows[0].created_user_id !== request.user.id
+          && checkStoryParaResult.rows[0].story_creator_id !== request.user.id
+        ) {
           throw new Error(globals.ACCESS_CONTROL_EDIT_PARAGRAPH_ERROR_MESSAGE);
         } else {
           const obj = {
@@ -402,14 +405,17 @@ export const handlePostEditParagraph = (pool) => (request, response) => {
     const errorMessage = 'You have to be logged in to edit a paragraph!';
     response.render('login', { userInfo: {}, genericSuccess: {}, genericError: { message: errorMessage } });
   } else {
-    const checkStoryParaQuery = `SELECT * FROM paragraphs WHERE id=${request.params.paragraphId} AND story_id=${request.params.storyId}`;
+    const checkStoryParaQuery = `SELECT paragraphs.id, paragraphs.created_user_id, paragraphs.last_updated_user_id, paragraphs.created_at, paragraphs.last_updated_at, paragraphs.story_id, paragraphs.paragraph, stories.created_user_id AS story_creator_id FROM paragraphs INNER JOIN stories ON paragraphs.story_id = stories.id WHERE paragraphs.id=${request.params.paragraphId} AND paragraphs.story_id=${request.params.storyId}`;
     pool
       .query(checkStoryParaQuery)
       // check access control, or if paragraph exists in story
       .then((checkStoryParaResult) => {
         if (checkStoryParaResult.rows.length === 0) {
           throw new Error(globals.NO_PARAGRAPH_EXISTS_ERROR_MESSAGE);
-        } else if (checkStoryParaResult.rows[0].created_user_id !== request.user.id) {
+        } else if (
+          checkStoryParaResult.rows[0].created_user_id !== request.user.id
+          && checkStoryParaResult.rows[0].story_creator_id !== request.user.id
+        ) {
           throw new Error(globals.ACCESS_CONTROL_EDIT_PARAGRAPH_ERROR_MESSAGE);
         } else {
           story = {
