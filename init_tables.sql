@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS collaborators_stories;
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   username TEXT,
+  realname TEXT,
   password TEXT
 );
 

@@ -28,7 +28,7 @@ showButton: false, pageState: "" }); -%>
           <% } %>
           <div class="col-12 mb-3">
             <label for="userName">
-              <strong>Name</strong>
+              <strong>Username</strong>
             </label>
             <input
               type="text"
@@ -46,9 +46,33 @@ showButton: false, pageState: "" }); -%>
               id="userName"
               name="username"
               value="<%= userInfo.username %>"
-              placeholder="e.g. Chee Kean"
+              placeholder="e.g. chee_kean"
             />
             <div class="invalid-feedback"><%= userInfo.username_invalid %></div>
+          </div>
+          <div class="col-12 mb-3">
+            <label for="realName">
+              <strong>Real Name</strong>
+            </label>
+            <input
+              type="text"
+              class="
+                form-control
+                <%
+                if
+                (userInfo.realname_invalid)
+                {%>
+                is-invalid
+                <%
+                }
+                %>
+              "
+              id="realName"
+              name="realname"
+              value="<%= userInfo.realname %>"
+              placeholder="e.g. Chee Kean"
+            />
+            <div class="invalid-feedback"><%= userInfo.realname_invalid %></div>
           </div>
           <div class="col-12 mb-3">
             <label for="password">

@@ -45,6 +45,12 @@ export const setUiUsername = (username) => username
   .split('-')
   .map((nameStr) => capitalizeFirstLetter(nameStr))
   .join('-');
+export const setDbRealname = (realname) => realname.toLowerCase()
+  .split(' ')
+  .map((nameStr) => capitalizeFirstLetter(nameStr)).join(' ')
+  .split('-')
+  .map((nameStr) => capitalizeFirstLetter(nameStr))
+  .join('-');
 
 export const setStorySummary = (paragraph) => {
   if (paragraph.length > globals.STORY_SUMMARY_CHAR_LIMIT) {

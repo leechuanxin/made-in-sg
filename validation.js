@@ -10,13 +10,28 @@ const validateStoryTitle = (story) => {
   return obj;
 };
 
+const validateRealName = (userInfo, type) => {
+  const obj = {};
+  if (!userInfo.realname || userInfo.realname.trim === '' || /\d/.test(userInfo.realname)) {
+    if (type === 'signup') {
+      obj.realname_invalid = 'Please enter your real name.';
+    }
+  }
+  return obj;
+};
+
 const validateUserName = (userInfo, type) => {
+  const regex = /^[a-z0-9_]+$/;
   const obj = {};
   if (!userInfo.username || userInfo.username.trim === '') {
     if (type === 'login') {
       obj.username_invalid = 'Please enter a username.';
     } else {
       obj.username_invalid = 'Please enter a valid username.';
+    }
+  } else if (userInfo.username.search(regex) === -1) {
+    if (type === 'signup') {
+      obj.username_invalid = 'Your username should only include numbers, lowercase alphabets, and/or underscores.';
     }
   }
   return obj;
@@ -75,6 +90,7 @@ export const validateParagraph = (paragraph, keywords) => ({
 
 export const validateUserInfo = (userInfo) => ({
   ...userInfo,
+  ...validateRealName(userInfo, 'signup'),
   ...validateUserName(userInfo, 'signup'),
   ...validatePassword(userInfo),
 });

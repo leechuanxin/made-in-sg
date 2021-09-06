@@ -576,8 +576,10 @@ export const handlePostSignup = (pool) => (request, response) => {
   } else {
     // get the hashed password as output from the SHA object
     const hashedPassword = util.getHash(validatedUserInfo.password);
-    const nameFmt = validatedUserInfo.username.split("'").join("''");
-    const username = util.setDbUsername(nameFmt);
+    const nameFmt = util.setDbRealname(
+      validatedUserInfo.realname.split("'").join("''"),
+    );
+    const { username } = validatedUserInfo;
 
     const usernameQuery = `SELECT * FROM users WHERE username='${username}'`;
     pool
@@ -586,8 +588,8 @@ export const handlePostSignup = (pool) => (request, response) => {
         if (result.rows.length > 0) {
           throw new Error(globals.USERNAME_EXISTS_ERROR_MESSAGE);
         } else {
-          const values = [username, hashedPassword];
-          const newUserQuery = 'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING *';
+          const values = [username, nameFmt, hashedPassword];
+          const newUserQuery = 'INSERT INTO users (username, realname, password) VALUES ($1, $2, $3) RETURNING *';
           return pool.query(newUserQuery, values);
         }
       })
@@ -629,8 +631,7 @@ export const handlePostLogin = (pool) => (request, response) => {
       genericError: {},
     });
   } else {
-    const nameFmt = validatedLogin.username.split("'").join("''");
-    const username = util.setDbUsername(nameFmt);
+    const username = validatedLogin.username.split("'").join("''");
     const usernameQuery = `SELECT * from users WHERE username='${username}'`;
 
     pool
