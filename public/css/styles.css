@@ -3,7 +3,8 @@
 }
 
 .random-paragraph:first-line {
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 1.125em;
   font-variant: small-caps;
 }
 
@@ -52,4 +53,47 @@ a.card-link {
 
 .popover {
   z-index: 1029;
+}
+
+.navbar-menu {
+  color: #eeeeee;
+  font-size: 1.5em;
+}
+
+.navbar-menu:hover {
+  color: #fff;
+}
+
+.offcanvas-body {
+  padding: 0;
+  height: 100%;
+}
+
+.offcanvas-body > div {
+  min-height: 100%;
+}
+
+.offcanvas-body .nav-pills .nav-link {
+  padding: 0.5rem 0;
+  border-radius: 0;
+}
+
+.offcanvas-body .active.nav-link,
+.offcanvas-body .active.nav-link:hover {
+  background: #3f51b5;
+}
+
+.offcanvas-body .nav-link:hover {
+  background: #1a237e;
+}
+
+.story-title-font {
+  font-family: "Questrial", sans-serif;
+  font-weight: 600;
+}
+
+.story-paragraph-font {
+  font-family: "Alegreya", serif;
+  font-weight: 400;
+  letter-spacing: 0.25px;
 }

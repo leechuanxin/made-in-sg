@@ -1,5 +1,5 @@
 <%- include('headers/html-header', {}); -%><%- include('nav/navbar', { user:
-user, showButton: true }); -%>
+user, showButton: true, pageState: "home" }); -%>
 <div class="container-fluid pt-5">
   <div class="row w-100 pt-4 pb-3 px-2">
     <% if (user && user.id) { %>
@@ -33,7 +33,9 @@ user, showButton: true }); -%>
         <div class="card">
           <div class="card-body d-flex flex-column">
             <div>
-              <h3 class="card-title mb-0 text-truncated"><%= story.title %></h3>
+              <h3 class="card-title mb-0 text-truncated story-title-font">
+                <%= story.title %>
+              </h3>
               <p class="text-center text-md-start mb-0">
                 <small class="fst-italic"
                   >Authored by: <%= story.created_username_fmt %></small
@@ -42,7 +44,7 @@ user, showButton: true }); -%>
             </div>
             <hr />
             <div class="card-paragraph d-flex align-items-center">
-              <p class="card-text"><%= story.summary %></p>
+              <p class="card-text story-paragraph-font"><%= story.summary %></p>
             </div>
           </div>
         </div>

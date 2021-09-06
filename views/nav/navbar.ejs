@@ -2,7 +2,15 @@
   <div class="container-fluid">
     <div class="row w-100">
       <div class="col-3">
-        <a class="navbar-brand" href="#">Navbar</a>
+        <a
+          class="navbar-menu"
+          data-bs-toggle="offcanvas"
+          href="#offcanvasExample"
+          role="button"
+          aria-controls="offcanvasExample"
+        >
+          <i class="fas fa-bars"></i>
+        </a>
       </div>
       <% if (showButton) { %>
       <div class="col-9 text-end">
@@ -22,3 +30,41 @@
     </div>
   </div>
 </nav>
+<div
+  class="offcanvas offcanvas-start"
+  tabindex="-1"
+  id="offcanvasExample"
+  aria-labelledby="offcanvasExampleLabel"
+>
+  <div class="offcanvas-body">
+    <div class="d-flex flex-column flex-shrink-0 text-white bg-dark">
+      <a
+        href="/"
+        class="
+          d-flex
+          align-items-center
+          mt-2
+          ms-4
+          mb-3 mb-md-0
+          me-md-auto
+          text-white text-decoration-none
+        "
+      >
+        <span class="fs-4">Made in SG</span>
+      </a>
+      <hr />
+      <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+          <a href="/" class="nav-link text-white ps-4 <% if (pageState === "home") { %>active<% } %>" aria-current="page"> Home </a>
+        </li>
+        <% if (user && user.id) { %>
+        <li>
+          <a href="/story" class="nav-link text-white ps-4 <% if (pageState === "createStory") { %>active<% } %>"
+            >Create a New Story</a
+          >
+        </li>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+</div>
