@@ -4,7 +4,7 @@ import * as globals from './globals.js';
 const getStory = (pool, request) => new Promise((resolve, reject) => {
   const { id } = request.params;
   // query to return story if it exists
-  const storyQuery = `SELECT stories.id, stories.created_user_id, users.realname AS created_username, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id WHERE stories.id=${id}`;
+  const storyQuery = `SELECT stories.id, stories.created_user_id, users.realname AS created_username, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph, stories.street FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id WHERE stories.id=${id}`;
 
   pool
     .query(storyQuery)
@@ -16,8 +16,8 @@ const getStory = (pool, request) => new Promise((resolve, reject) => {
         const story = {
           ...result.rows[0],
           created_username_fmt: createdUsernameFmt,
-          starting_paragraph: result.rows[0].starting_paragraph.split('{{name}}').join(result.rows[0].created_username),
-          ending_paragraph: result.rows[0].ending_paragraph.split('{{name}}').join(result.rows[0].created_username),
+          starting_paragraph: result.rows[0].starting_paragraph.split('{{name}}').join(result.rows[0].created_username).split('{{street}}').join(result.rows[0].street),
+          ending_paragraph: result.rows[0].ending_paragraph.split('{{name}}').join(result.rows[0].created_username).split('{{street}}').join(result.rows[0].street),
         };
         resolve(story);
       }

@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS paragraphs;
 DROP TABLE IF EXISTS paragraphs_keywords;
 DROP TABLE IF EXISTS keywords;
 DROP TABLE IF EXISTS collaborators_stories;
+DROP TABLE IF EXISTS streets;
 
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
@@ -22,7 +23,8 @@ CREATE TABLE IF NOT EXISTS stories (
   last_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   starting_paragraph_id INTEGER,
   ending_paragraph_id INTEGER,
-  title TEXT
+  title TEXT,
+  street TEXT
 );
 
 CREATE TABLE IF NOT EXISTS starting_paragraphs (
@@ -64,4 +66,9 @@ CREATE TABLE IF NOT EXISTS collaborators_stories (
   keyword1_id INTEGER,
   keyword2_id INTEGER,
   keyword3_id INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS streets (
+  id SERIAL PRIMARY KEY,
+  street TEXT
 );
