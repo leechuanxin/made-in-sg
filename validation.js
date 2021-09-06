@@ -1,3 +1,5 @@
+import * as globals from './globals.js';
+
 const validateStoryTitle = (story) => {
   const obj = {};
   if (!story.title || story.title.trim === '') {
@@ -43,8 +45,8 @@ const validateParagraphValid = (paragraph) => {
 
 const validateParagraphCharCount = (paragraph) => {
   const obj = {};
-  if (paragraph.paragraph.length > 600) {
-    obj.paragraph_charcount_invalid = 'Your new paragraph, inclusive of spaces, must be 600 characters or less!';
+  if (paragraph.paragraph.length > globals.PARAGRAPH_CHAR_LIMIT) {
+    obj.paragraph_charcount_invalid = `Your new paragraph, inclusive of spaces, must be ${globals.PARAGRAPH_CHAR_LIMIT} characters or less!`;
   }
   return obj;
 };
