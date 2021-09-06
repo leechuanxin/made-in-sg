@@ -12,6 +12,17 @@ user, showButton: true }); -%>
             >
           </p>
         </div>
+        <% if (user && user.id && user.id === story.created_user_id) { %>
+        <div class="col-12 col-md-6 mt-2 mt-md-0 text-center text-md-end">
+          <form
+            class="d-inline-block"
+            action="/story/<%= story.id %>/delete?_method=DELETE"
+            method="POST"
+          >
+            <input class="btn btn-danger" type="submit" value="Delete Story" />
+          </form>
+        </div>
+        <% } %>
       </div>
       <hr />
     </div>

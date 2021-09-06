@@ -67,6 +67,57 @@ export const handlePostNewStory = (pool) => (request, response) => {
   }
 };
 
+export const handleDeleteStory = (pool) => (request, response) => {
+  if (!request.isUserLoggedIn) {
+    const errorMessage = 'You have to be logged in to delete a story!';
+    response.render('login', { userInfo: {}, genericSuccess: {}, genericError: { message: errorMessage } });
+  } else {
+    const storyQuery = `SELECT * FROM stories WHERE id=${request.params.id}`;
+    pool
+      .query(storyQuery)
+      .then((result) => {
+        if (result.rows.length === 0) {
+          throw new Error(globals.STORY_NOT_FOUND_ERROR_MESSAGE);
+        } else {
+          const matchStoryUserQuery = `SELECT * FROM stories WHERE id=${request.params.id} AND created_user_id=${request.user.id}`;
+          return pool.query(matchStoryUserQuery);
+        }
+      })
+      .then((result) => {
+        if (result.rows.length === 0) {
+          throw new Error(globals.ACCESS_CONTROL_DELETE_PARAGRAPH_ERROR_MESSAGE);
+        } else {
+          const matchParaKeysToStoryQuery = `SELECT paragraphs_keywords.id, paragraphs.story_id FROM paragraphs_keywords INNER JOIN paragraphs ON paragraphs_keywords.paragraph_id=paragraphs.id WHERE paragraphs.story_id=${request.params.id}`;
+          return pool.query(matchParaKeysToStoryQuery);
+        }
+      })
+      .then((result) => {
+        const ids = [];
+        result.rows.forEach((row) => {
+          ids.push(row.id);
+        });
+        const deleteAllParaKeysQuery = `DELETE FROM paragraphs_keywords WHERE id IN (${ids.join(', ')})`;
+        const deleteAllCollabStoriesQuery = `DELETE FROM collaborators_stories WHERE story_id=${request.params.id}`;
+        const deleteParagraphsQuery = `DELETE FROM paragraphs WHERE story_id=${request.params.id}`;
+        const deleteStoryQuery = `DELETE FROM stories WHERE id=${request.params.id}`;
+        return Promise.all(
+          [
+            pool.query(deleteAllParaKeysQuery),
+            pool.query(deleteAllCollabStoriesQuery),
+            pool.query(deleteParagraphsQuery),
+            pool.query(deleteStoryQuery),
+          ],
+        );
+      })
+      .then(() => {
+        response.redirect('/');
+      })
+      .catch((error) => {
+        response.send(`Error: ${error.message}`);
+      });
+  }
+};
+
 export const handleGetStory = (pool) => (request, response) => {
   const { id } = request.params;
   let story = {};

@@ -64,6 +64,7 @@ app.delete('/logout', routes.handleLogout);
 app.get('/story', routes.handleGetNewStory);
 app.post('/story', routes.handlePostNewStory(pool));
 app.get('/story/:id', routes.handleGetStory(pool));
+app.delete('/story/:id/delete', routes.handleDeleteStory(pool));
 app.get('/story/:id/paragraph', routes.handleGetStoryParagraph(pool));
 app.post('/story/:id/paragraph', routes.handlePostStoryParagraph(pool));
 app.get('/story/:storyId/paragraph/:paragraphId', routes.handleGetEditParagraph(pool));
