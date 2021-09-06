@@ -10,11 +10,16 @@ export const handleIndex = (pool) => (request, response) => {
   pool
     .query(storiesQuery)
     .then((result) => {
-      const stories = result.rows.map((story) => ({
-        ...story,
-        created_username_fmt: story.created_username,
-        summary: util.setStorySummary(story.starting_paragraph),
-      }));
+      const stories = result.rows.map((story) => {
+        const newStartingParagraph = story.starting_paragraph.split('{{name}}').join(story.created_username);
+        return {
+          ...story,
+          created_username_fmt: story.created_username,
+          starting_paragraph: newStartingParagraph,
+          ending_paragraph: story.ending_paragraph.split('{{name}}').join(story.created_username),
+          summary: util.setStorySummary(newStartingParagraph),
+        };
+      });
       response.render('index', { user: request.user, stories });
     });
 };
@@ -130,7 +135,10 @@ export const handleGetStory = (pool) => (request, response) => {
       } else {
         const createdUsernameFmt = result.rows[0].created_username;
         story = {
-          created_username_fmt: createdUsernameFmt, ...result.rows[0],
+          created_username_fmt: createdUsernameFmt,
+          ...result.rows[0],
+          starting_paragraph: result.rows[0].starting_paragraph.split('{{name}}').join(result.rows[0].created_username),
+          ending_paragraph: result.rows[0].ending_paragraph.split('{{name}}').join(result.rows[0].created_username),
         };
         // get all paragraphs, starting with the earliest
         const paragraphsQuery = `SELECT paragraphs.id, paragraphs.created_user_id, users.realname AS created_username, paragraphs.last_updated_user_id, paragraphs.story_id, paragraphs.paragraph FROM paragraphs INNER JOIN users ON users.id=paragraphs.created_user_id WHERE story_id=${id} ORDER BY id ASC`;
@@ -282,6 +290,8 @@ export const handleGetEditParagraph = (pool) => (request, response) => {
                   created_username_fmt: createdUsernameFmt,
                   ...storyQueryResult.rows[0],
                   ...result,
+                  starting_paragraph: storyQueryResult.rows[0].starting_paragraph.split('{{name}}').join(storyQueryResult.rows[0].created_username),
+                  ending_paragraph: storyQueryResult.rows[0].ending_paragraph.split('{{name}}').join(storyQueryResult.rows[0].created_username),
                 };
                 resolve(obj);
               }
@@ -426,6 +436,8 @@ export const handlePostEditParagraph = (pool) => (request, response) => {
                   created_username_fmt: createdUsernameFmt,
                   ...storyQueryResult.rows[0],
                   ...result,
+                  starting_paragraph: storyQueryResult.rows[0].starting_paragraph.split('{{name}}').join(storyQueryResult.rows[0].created_username),
+                  ending_paragraph: storyQueryResult.rows[0].ending_paragraph.split('{{name}}').join(storyQueryResult.rows[0].created_username),
                 };
                 resolve(story);
               }
