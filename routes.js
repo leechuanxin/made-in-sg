@@ -6,13 +6,13 @@ import * as globals from './globals.js';
 
 export const handleIndex = (pool) => (request, response) => {
   // retrieve all stories, sorted latest (created) first
-  const storiesQuery = 'SELECT stories.id, stories.created_user_id, users.username AS created_username, stories.created_at, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id ORDER BY stories.created_at DESC';
+  const storiesQuery = 'SELECT stories.id, stories.created_user_id, users.realname AS created_username, stories.created_at, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id ORDER BY stories.created_at DESC';
   pool
     .query(storiesQuery)
     .then((result) => {
       const stories = result.rows.map((story) => ({
         ...story,
-        created_username_fmt: util.setUiUsername(story.created_username),
+        created_username_fmt: story.created_username,
         summary: util.setStorySummary(story.starting_paragraph),
       }));
       response.render('index', { user: request.user, stories });
@@ -121,19 +121,19 @@ export const handleDeleteStory = (pool) => (request, response) => {
 export const handleGetStory = (pool) => (request, response) => {
   const { id } = request.params;
   let story = {};
-  const storyQuery = `SELECT stories.id, stories.created_user_id, users.username AS created_username, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id WHERE stories.id=${id}`;
+  const storyQuery = `SELECT stories.id, stories.created_user_id, users.realname AS created_username, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id WHERE stories.id=${id}`;
   pool
     .query(storyQuery)
     .then((result) => {
       if (result.rows.length === 0) {
         throw new Error(globals.STORY_NOT_FOUND_ERROR_MESSAGE);
       } else {
-        const createdUsernameFmt = util.setUiUsername(result.rows[0].created_username);
+        const createdUsernameFmt = result.rows[0].created_username;
         story = {
           created_username_fmt: createdUsernameFmt, ...result.rows[0],
         };
         // get all paragraphs, starting with the earliest
-        const paragraphsQuery = `SELECT paragraphs.id, paragraphs.created_user_id, users.username AS created_username, paragraphs.last_updated_user_id, paragraphs.story_id, paragraphs.paragraph FROM paragraphs INNER JOIN users ON users.id=paragraphs.created_user_id WHERE story_id=${id} ORDER BY id ASC`;
+        const paragraphsQuery = `SELECT paragraphs.id, paragraphs.created_user_id, users.realname AS created_username, paragraphs.last_updated_user_id, paragraphs.story_id, paragraphs.paragraph FROM paragraphs INNER JOIN users ON users.id=paragraphs.created_user_id WHERE story_id=${id} ORDER BY id ASC`;
         return pool.query(paragraphsQuery);
       }
     })
@@ -141,7 +141,7 @@ export const handleGetStory = (pool) => (request, response) => {
       const paragraphs = (result.rows.length > 0) ? result.rows : [];
       const paragraphsFmt = paragraphs.map((paragraph) => ({
         ...paragraph,
-        created_username_fmt: util.setUiUsername(paragraph.created_username),
+        created_username_fmt: paragraph.created_username,
       }));
       story = {
         ...story,
@@ -270,15 +270,14 @@ export const handleGetEditParagraph = (pool) => (request, response) => {
       // get story
       .then(
         (result) => new Promise((resolve, reject) => {
-          const storyQuery = `SELECT stories.created_user_id, users.username AS created_username, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id WHERE stories.id=${request.params.storyId}`;
+          const storyQuery = `SELECT stories.created_user_id, users.realname AS created_username, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id WHERE stories.id=${request.params.storyId}`;
           pool
             .query(storyQuery)
             .then((storyQueryResult) => {
               if (storyQueryResult.rows.length === 0) {
                 throw new Error(globals.STORY_NOT_FOUND_ERROR_MESSAGE);
               } else {
-                const createdUsernameFmt = util
-                  .setUiUsername(storyQueryResult.rows[0].created_username);
+                const createdUsernameFmt = storyQueryResult.rows[0].created_username;
                 const obj = {
                   created_username_fmt: createdUsernameFmt,
                   ...storyQueryResult.rows[0],
@@ -344,7 +343,7 @@ export const handleGetEditParagraph = (pool) => (request, response) => {
       // get all paragraphs
       .then(
         (result) => new Promise((resolve, reject) => {
-          const paragraphsQuery = `SELECT paragraphs.id, paragraphs.created_user_id, users.username AS created_username, paragraphs.last_updated_user_id, paragraphs.story_id, paragraphs.paragraph FROM paragraphs INNER JOIN users ON users.id=paragraphs.created_user_id WHERE story_id=${request.params.storyId} ORDER BY id ASC`;
+          const paragraphsQuery = `SELECT paragraphs.id, paragraphs.created_user_id, users.realname AS created_username, paragraphs.last_updated_user_id, paragraphs.story_id, paragraphs.paragraph FROM paragraphs INNER JOIN users ON users.id=paragraphs.created_user_id WHERE story_id=${request.params.storyId} ORDER BY id ASC`;
           pool
             .query(paragraphsQuery)
             .then((paragraphsQueryResult) => {
@@ -353,7 +352,7 @@ export const handleGetEditParagraph = (pool) => (request, response) => {
                 : [];
               const paragraphsFmt = paragraphs.map((paragraph) => ({
                 ...paragraph,
-                created_username_fmt: util.setUiUsername(paragraph.created_username),
+                created_username_fmt: paragraph.created_username,
               }));
               const obj = {
                 ...result,
@@ -415,15 +414,14 @@ export const handlePostEditParagraph = (pool) => (request, response) => {
       // get story
       .then(
         (result) => new Promise((resolve, reject) => {
-          const storyQuery = `SELECT stories.created_user_id, users.username AS created_username, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id WHERE stories.id=${request.params.storyId}`;
+          const storyQuery = `SELECT stories.created_user_id, users.realname AS created_username, stories.title, stories.starting_paragraph_id, starting_paragraphs.paragraph AS starting_paragraph, stories.ending_paragraph_id, ending_paragraphs.paragraph AS ending_paragraph FROM stories INNER JOIN starting_paragraphs ON stories.starting_paragraph_id = starting_paragraphs.id INNER JOIN ending_paragraphs ON stories.ending_paragraph_id = ending_paragraphs.id INNER JOIN users ON stories.created_user_id = users.id WHERE stories.id=${request.params.storyId}`;
           pool
             .query(storyQuery)
             .then((storyQueryResult) => {
               if (storyQueryResult.rows.length === 0) {
                 throw new Error(globals.STORY_NOT_FOUND_ERROR_MESSAGE);
               } else {
-                const createdUsernameFmt = util
-                  .setUiUsername(storyQueryResult.rows[0].created_username);
+                const createdUsernameFmt = storyQueryResult.rows[0].created_username;
                 story = {
                   created_username_fmt: createdUsernameFmt,
                   ...storyQueryResult.rows[0],
@@ -489,7 +487,7 @@ export const handlePostEditParagraph = (pool) => (request, response) => {
       // get all paragraphs
       .then(
         (result) => new Promise((resolve, reject) => {
-          const paragraphsQuery = `SELECT paragraphs.id, paragraphs.created_user_id, users.username AS created_username, paragraphs.last_updated_user_id, paragraphs.story_id, paragraphs.paragraph FROM paragraphs INNER JOIN users ON users.id=paragraphs.created_user_id WHERE story_id=${request.params.storyId} ORDER BY id ASC`;
+          const paragraphsQuery = `SELECT paragraphs.id, paragraphs.created_user_id, users.realname AS created_username, paragraphs.last_updated_user_id, paragraphs.story_id, paragraphs.paragraph FROM paragraphs INNER JOIN users ON users.id=paragraphs.created_user_id WHERE story_id=${request.params.storyId} ORDER BY id ASC`;
           pool
             .query(paragraphsQuery)
             .then((paragraphsQueryResult) => {
@@ -498,7 +496,7 @@ export const handlePostEditParagraph = (pool) => (request, response) => {
                 : [];
               const paragraphsFmt = paragraphs.map((paragraph) => ({
                 ...paragraph,
-                created_username_fmt: util.setUiUsername(paragraph.created_username),
+                created_username_fmt: paragraph.created_username,
               }));
               story = {
                 ...result,
