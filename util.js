@@ -50,7 +50,10 @@ export const setDbRealname = (realname) => realname.toLowerCase()
   .map((nameStr) => capitalizeFirstLetter(nameStr)).join(' ')
   .split('-')
   .map((nameStr) => capitalizeFirstLetter(nameStr))
-  .join('-');
+  .join('-')
+  .split('.')
+  .map((nameStr) => capitalizeFirstLetter(nameStr))
+  .join('.');
 
 export const setStorySummary = (paragraph) => {
   if (paragraph.length > globals.STORY_SUMMARY_CHAR_LIMIT) {
