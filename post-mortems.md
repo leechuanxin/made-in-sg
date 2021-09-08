@@ -12,6 +12,10 @@ Initially, the tricky part is consolidating this knowledge together with underst
 
 ### What were the biggest challenges you faced? Please share a link to the specific code.
 
+When developing the initial UI for previewing a paragraph's author and including a link to edit a paragraph, I kept falling back to a popover interface, similar to Medium's.
+
+I was reluctant to use a popover, because I initially thought only text content can be inserted into a popover. Upon learning about the `html` [option Bootstrap's popover offers](https://getbootstrap.com/docs/5.1/components/popovers/#options), I was still worried due to the fear of XSS. I did not seek to resolve this in the end, because I thought I was looking too far ahead, and my initial learning goal wasn't to optimise for security in this project.
+
 In my 1-on-1 discussions with my instructor Akira, I realised it is probably not a good practice to use middleware as a convenient way to set global values from entries returned by the `request` or `response` object.
 
 The suggestion is to refactor the conceptually problematic middleware as JavaScript modules. This refactoring was a challenge; it required an understanding that in a Promise chain, the callbacks within each `.then` function should also return Promise-like objects.
