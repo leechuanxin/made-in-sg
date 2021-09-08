@@ -32,6 +32,10 @@ Thus, towards the end I only rushed to ensure the features are added, as opposed
 
 The functions [handleGetEditParagraph](https://github.com/leechuanxin/made-in-sg/blob/main/routes.js#L263) and [handlePostEditParagraph](https://github.com/leechuanxin/made-in-sg/blob/main/routes.js#L408) had similar Promise chains at the beginning, so those can be written as modules to avoid repeated logic instead.
 
+### Other questions?
+
+1. For generating random street names, I found a [large .txt file](https://raw.githubusercontent.com/leechuanxin/made-in-sg/main/data/txt/sg_streets.txt) downloaded as a `.zip` from [Geonames.org](http://download.geonames.org/export/zip/). Initially, I [cleaned the data up](https://github.com/leechuanxin/made-in-sg/blob/main/data/js/sg_streets.js) and converted it into a `.json` file using Node's `fs` module. Midway, I decided to use an online JSON to SQL converter to rewrite them as entries in my database. Under what circumstances should I have the data as JSON (to be read by Node's `fs`), or as SQL entries in the database?
+
 
 
 # Process Review
