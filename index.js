@@ -13,7 +13,15 @@ const { Pool } = pg;
 // create separate DB connection configs for production vs non-production environments.
 // ensure our server still works on our local machines.
 let pgConnectionConfigs;
-if (process.env.ENV === 'PRODUCTION') {
+if (process.env.DATABASE_URL) {
+  // pg will take in the entire value and use it to connect
+  pgConnectionConfigs = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  };
+} else if (process.env.PROVIDER === 'AWS') {
   // determine how we connect to the remote Postgres server
   pgConnectionConfigs = {
     user: 'postgres',
@@ -50,7 +58,7 @@ app.use(express.static('public'));
 dotenv.config();
 
 // GLOBAL CONSTANTS
-const PORT = process.argv[2];
+const PORT = process.env.PORT || 3004;
 
 // Auth
 app.use(auth(pool));
