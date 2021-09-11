@@ -113,9 +113,20 @@ export const handleDeleteStory = (pool) => (request, response) => {
         const deleteAllCollabStoriesQuery = `DELETE FROM collaborators_stories WHERE story_id=${request.params.id}`;
         const deleteParagraphsQuery = `DELETE FROM paragraphs WHERE story_id=${request.params.id}`;
         const deleteStoryQuery = `DELETE FROM stories WHERE id=${request.params.id}`;
+
+        if (ids.length > 0) {
+          return Promise.all(
+            [
+              pool.query(deleteAllParaKeysQuery),
+              pool.query(deleteAllCollabStoriesQuery),
+              pool.query(deleteParagraphsQuery),
+              pool.query(deleteStoryQuery),
+            ],
+          );
+        }
+
         return Promise.all(
           [
-            pool.query(deleteAllParaKeysQuery),
             pool.query(deleteAllCollabStoriesQuery),
             pool.query(deleteParagraphsQuery),
             pool.query(deleteStoryQuery),
